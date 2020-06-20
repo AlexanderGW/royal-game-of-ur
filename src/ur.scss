@@ -1,0 +1,238 @@
+@function calc-width($value1, $value2) {
+	@return $value1 + $value2;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	font-family: sans-serif;
+	background-color: #222;
+	color: #fff;
+}
+
+a {
+	color: #fff;
+}
+
+.debug {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -4em;
+	font-size: 3em;
+	text-align: center;
+}
+
+.welcome {
+	> div {
+		margin: 5em auto 0;
+		width: 60%;
+		max-width: 64em;
+		text-align: center;
+	}
+}
+
+.container {
+	display: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	&.show {
+		display: block;
+	}
+}
+
+.banner {
+	background-color: rgba(0, 0, 0, .75);
+	> div {
+		position: absolute;
+		top: 42.5%;
+		left: 50%;
+		width: 50%;
+		transform: translate(-50%, -50%);
+		box-sizing: border-box;
+		text-align: center;
+		font-size: 4em;
+		font-weight: 700;
+		padding: 1em;
+		color: #fff;
+	}
+	&.win > div {
+		background-color: rgba(0, 128, 0, 0.8);
+	}
+	&.lose > div {
+		background-color: rgba(255, 0, 0, 0.8);
+	}
+}
+
+.ur {
+	position: absolute;
+	top: 42.5%;
+	left: 50%;
+	transform: translate(-50%, -50%) scale(.75);
+	box-sizing: border-box;
+	width: 800px;
+	height: 300px;
+	.board {
+		box-sizing: border-box;
+		display: table;
+		width: 100%;
+		height: 100%;
+		border: .125em solid rgba(26, 26, 26, 0.7);
+		overflow: hidden;
+		> div {
+			display: table-row;
+			&:nth-child(1), &:nth-child(3) {
+				> div {
+					/* Prepare rosette */
+					&:nth-child(1) {
+						background-color: rgba(0,128,0,.5);
+					}
+					/* Empty */
+					&:nth-child(5), &:nth-child(6) {
+						background-color: rgba(255,255,255,.5);
+					}
+					/* Safe rosette */
+					&:nth-child(7) {
+						background-color: rgba(0,0,128,.5);
+					}
+					/* Safe */
+					&:nth-child(8) {
+						background-color: rgba(0,0,255,.5);
+					}
+				}
+			}
+			&:nth-child(2) {
+				/* War */
+				> div {
+					background-color: rgba(255,0,0,.5);
+					/* War rosette */
+					&:nth-child(4) {
+						background-color: rgba(128,0,0,.5);
+					}
+				}
+			}
+			/* Prepare */
+			> div {
+				display: table-cell;
+				background-color: rgba(0,255,0,.5);
+				border: .125em solid rgba(26, 26, 26, 0.5);
+			}
+		}
+	}
+	.pieces {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		&.enemy > div > div {
+			> div {
+				background-color: rgba(0,0,255,.75);
+			}
+			&.inactive > div {
+				background-color: rgba(127,127,255,.4);
+			}
+		}
+		> div {
+			position: relative;
+			width: 12.5%;
+			height: 33.33333335%;
+			> div {
+				width: 100%;
+				height: 100%;
+				position: absolute;
+				transition: all .1s ease;
+				left: 400%;
+				&.inactive > div {
+					background-color: rgba(255,127,127,.4);
+				}
+				&.p1 {
+					top: -100%;
+					left: 300%;
+				}
+				&.p2 {
+					top: -100%;
+					left: 200%;
+				}
+				&.p3 {
+					top: -100%;
+					left: 100%;
+				}
+				&.p4 {
+					top: -100%;
+					left: 0;
+				}
+				&.p5 {
+					top: -200%;
+					left: 0;
+				}
+				&.p6 {
+					top: -200%;
+					left: 100%;
+				}
+				&.p7 {
+					top: -200%;
+					left: 200%;
+				}
+				&.p8 {
+					top: -200%;
+					left: 300%;
+				}
+				&.p9 {
+					top: -200%;
+					left: 400%;
+				}
+				&.p10 {
+					top: -200%;
+					left: 500%;
+				}
+				&.p11 {
+					top: -200%;
+					left: 600%;
+				}
+				&.p12 {
+					top: -200%;
+					left: 700%;
+				}
+				&.p13 {
+					top: -100%;
+					left: 700%;
+				}
+				&.p14 {
+					top: -100%;
+					left: 600%;
+				}
+				&.p15 {
+					top: -100%;
+					left: 500%;
+				}
+				> div {
+					position: absolute;
+					top: 20%;
+					left: 20%;
+					width: 60%;
+					height: 60%;
+					border-radius: 50%;
+					background-color: rgba(255,0,0,.75);
+					border: .125em solid white;
+					box-sizing: border-box;
+				}
+			}
+		}
+		&:nth-child(even) {
+			top: 100%;
+		}
+		&:nth-child(odd) {
+			top: -100%;
+			-moz-transform: scale(1, -1);
+			-o-transform: scale(1, -1);
+			-webkit-transform: scale(1, -1);
+			transform: scale(1, -1);
+		}
+	}
+}

@@ -1,0 +1,31 @@
+{
+  "name": "ur",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "server": "node server.js",
+    "test": "php -S localhost:8000 -t src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexanderGW/game-of-ur.git"
+  },
+  "author": "Alexander Gailey-White",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AlexanderGW/game-of-ur/issues"
+  },
+  "homepage": "https://github.com/AlexanderGW/game-of-ur#readme",
+  "devDependencies": {
+    "grunt": "^1.0.4",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-node-sass": "^1.0.1",
+    "grunt-sass": "^3.0.2",
+    "node-sass": "^4.12.0"
+  },
+  "dependencies": {
+    "uuidv4": "^6.1.0",
+    "websocket": "^1.0.26"
+  }
+}
