@@ -12,7 +12,7 @@ const { uuid } = require('uuidv4');
 // Optional. You will see this name in eg. 'ps' or 'top' command
 process.title = 'ur-server';
 // Port where we'll run the websocket server
-var webSocketsServerPort = 1337;
+var webSocketsServerPort = process.argv[2] || 1337;
 // websocket and http servers
 var webSocketServer = require('websocket').server;
 var http = require('http');
