@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "server": "node server.js",
-    "test": "php -S localhost:8000 -t src"
+    "test": "node index.js"
   },
   "repository": {
     "type": "git",

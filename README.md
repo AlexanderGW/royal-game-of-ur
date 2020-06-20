@@ -27,6 +27,6 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 
 `npn server` Runs the [Websocket server](../blob/master/server.js) on port `0.0.0.0:1337`
 
-`npm test` to run a PHP server on the `src` directory <http://localhost:8000/index.htm>
+`npm test [8000]` to run an HTTP server (optional port number, default 8000) on the `src` directory <http://localhost:8000/index.htm>
 
 `grunt` to watch for SASS style changes, or `grunt sass` to build
