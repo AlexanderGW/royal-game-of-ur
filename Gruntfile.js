@@ -10,14 +10,14 @@ module.exports = function(grunt) {
 			},
 			dist: {
 				files: {
-					'src/ur.css' : 'src/ur.scss'
+					'src/ur.css' : 'ur.scss'
 				}
 			}
 		},
 
 		watch: {
 			source: {
-				files: ['src/ur.scss'],
+				files: ['ur.scss'],
 				tasks: ['sass'],
 				options: {
 					livereload: true
