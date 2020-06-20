@@ -25,7 +25,7 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 
 ## Development
 
-`npn server [1337]` to run [Websocket server](../blob/master/server.js) on optional port number (default `1337`)
+`npn server [1337]` to run [Websocket server](../master/server.js) on optional port number (default `1337`)
 
 `npm test [8000]` to run an HTTP server on optional port number (default `8000`) on the `src` directory <http://localhost:8000/index.htm>
 
