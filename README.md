@@ -1,6 +1,8 @@
 # The royal game of Ur
 Written in Node.JS, using WebSockets by Alexander Gailey-White
 
+![Game demo](https://gailey-white.com/wp-content/uploads/2020/06/royal-game-of-ur.png)
+
 ## Notes
 
 * Intial release
