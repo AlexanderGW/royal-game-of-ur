@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * Game of Ur - Node.JS websocket edition
  *
