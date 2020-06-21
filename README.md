@@ -10,7 +10,7 @@ Written in Node.JS, using WebSockets by Alexander Gailey-White
 
 ## Known issues
 
-* No piece position validation to end the game on illegal piece moves
+TBC
 
 ## Rules
 
