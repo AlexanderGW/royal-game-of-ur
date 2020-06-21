@@ -1,8 +1,8 @@
 {
-  "name": "ur",
+  "name": "game-of-ur",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "The royal game of Ur, written in JavaScript using Node.JS and WebSockets",
+  "main": "index.js",
   "scripts": {
     "server": "node server.js",
     "test": "node index.js"
