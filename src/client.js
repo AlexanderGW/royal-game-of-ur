@@ -107,7 +107,7 @@ $(function() {
 					if (json.i >= 0) {
 						me = ((json.me && json.user === userId) || (players.includes(userId) === false && players[0] === json.user));
 
-						console.log('move '+(me?'our':'their')+' piece ['+json.user+' : '+userId+']');
+						console.log('move '+(me?'our':'their')+' piece '+json.i+' to '+json.j);
 
 						if (json.j) {
 							doPieceMove(json.i, json.j);
@@ -265,7 +265,7 @@ $(function() {
 
 
 	function getPiecePosWithRoll(piece, idx, k) {
-		console.log('getPiecePosWithRoll('+$(piece).prop('outerHTML')+','+idx+','+k+')');
+		// console.log('getPiecePosWithRoll('+$(piece).prop('outerHTML')+','+idx+','+k+')');
 		let curr_pos, next_pos, other_piece = null;
 		let l = 0;
 
@@ -309,7 +309,7 @@ $(function() {
 						return 0;
 
 					// Reset opposing piece
-					console.log('can reset opposing piece ' + idx);
+					console.log('will reset opposing piece ' + idx);
 					return next_pos;
 				}
 			}
