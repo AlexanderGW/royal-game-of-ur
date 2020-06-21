@@ -30,21 +30,72 @@ var users = [];
 // list of current games
 var games = [];
 
-
-
-
-
-
+// Positions that allow the player another turn
 function piecePosHasFreeRoll(pos) {
 	return (pos === 4 || pos === 8 || pos === 14);
 }
 
-
+// Generate a random number, upto one before max
 function getRandomInt(max) {
 	return Math.floor(Math.random() * Math.floor(max));
 }
 
+// Validate game piece
+function validateGamePiecePosWithRoll(gameId, piece, curr_pos, k) {
+	// console.log('game '+gameId+' piece '+piece+' at '+curr_pos+' rolling '+k);
 
+	// We are attempting a piece move
+	if (k > 0) {
+		let next_pos = curr_pos + k;
+
+		// Piece can not be moved this many spaces
+		if (next_pos > 15)
+			return 0;
+
+		// console.log(games);
+
+		// Check position is not occupied by another own piece
+		let otherPieces = games[gameId].pieces[games[gameId].players[games[gameId].turn.player]];
+		if (otherPieces.length) {
+			for (let i = 0; i < otherPieces.length; i++) {
+				if (otherPieces[i] === next_pos && next_pos < 15) {
+					// console.log('cannot move piece ' + piece + ' at '+curr_pos+' to ' + next_pos);
+					return 0;
+				}
+			}
+		}
+
+		// Traversing the gauntlet
+		if (next_pos > 4 && next_pos < 13) {
+			let oppositePieceIdx = (games[gameId].turn.player === 0 ? 1 : 0);
+			let opposingPieces = games[gameId].pieces[games[gameId].players[oppositePieceIdx]];
+
+			if (opposingPieces.length) {
+				for (let i = 0; i < opposingPieces.length; i++) {
+
+					// Hit opposing piece
+					if (opposingPieces[i] === next_pos) {
+
+						// They're protected on this rosette, cannot move k spaces to j
+						if (next_pos === 8)
+							return 0;
+
+						// Reset opposing piece
+						// console.log('reset opposing piece '+next_pos);
+						games[gameId].pieces[games[gameId].players[oppositePieceIdx]][i] = 0;
+					}
+				}
+			}
+		}
+
+		// Move piece to new position on board
+		// console.log('can move piece ' + piece + ' at '+curr_pos+' to ' + next_pos);
+		return next_pos;
+	}
+
+	// No moves possible
+	return 0;
+}
 
 /**
  * Helper function for escaping input strings
@@ -197,90 +248,79 @@ wsServer.on('request', function(request) {
 								// Requesting user is in the game?
 								if (games[json.uuid].players.includes(userName)) {
 
-									// TODO: is it their turn?
-									let nextPlayer = -1;
-									let rolls = 0;
-									let curr_pos = 0;
-									let next_pos = 0;
+									// Is it their turn, and should they be actioning it?
+									if (
+										games[json.uuid].players[games[json.uuid].turn.player] === userName
+										&& games[json.uuid].players[games[json.uuid].turn.player] === json.user
+									) {
+										let nextPlayer = -1;
+										let rolls = 0;
+										let curr_pos = 0;
+										let next_pos = 0;
 
-									if (json.i >= 0) {
-										curr_pos = games[json.uuid].pieces[json.user][json.i];
-										next_pos = games[json.uuid].pieces[json.user][json.i] = json.j < 0 ? 0 : json.j;
+										// Piece is moving on the board
+										if (json.i >= 0) {
 
-										if (piecePosHasFreeRoll(next_pos) === true && games[json.uuid].turn.rolls < 4) {
-											console.log('a free roll');
-											console.log(games[json.uuid].turn);
-											rolls = games[json.uuid].turn.rolls;
-											nextPlayer = games[json.uuid].turn.player === 0 ? 0 : 1;
+											// Current piece position
+											if (json.i in games[json.uuid].pieces[json.user])
+												curr_pos = games[json.uuid].pieces[json.user][json.i];
+											else
+												curr_pos = 0;
+
+											// Get next position, based on current position, and roll
+											let validated_pos = validateGamePiecePosWithRoll(json.uuid, json.i, curr_pos, games[json.uuid].turn.roll);
+
+											// Player piece move validated
+											if (validated_pos === json.j) {
+												next_pos = games[json.uuid].pieces[json.user][json.i] = json.j < 0 ? 0 : json.j;
+
+												// Can same player roll again?
+												if (piecePosHasFreeRoll(next_pos) === true && games[json.uuid].turn.rolls < 4) {
+													rolls = games[json.uuid].turn.rolls;
+													nextPlayer = games[json.uuid].turn.player === 0 ? 0 : 1;
+												}
+												// console.log(rolls);
+											} else {
+												// console.log('invalid move piece '+json.i);
+												// TODO: End the game, in favor of opposition?
+											}
 										}
-										console.log(rolls);
-									}
-									rolls++;
+										rolls++;
 
-									if (nextPlayer < 0)
-										nextPlayer = games[json.uuid].turn.player === 0 ? 1 : 0;
+										// Switch player
+										if (nextPlayer < 0)
+											nextPlayer = games[json.uuid].turn.player === 0 ? 1 : 0;
 
-									// Record the move
-									games[json.uuid].moves.push(json);
+										// Record the move
+										games[json.uuid].moves.push(json);
 
-									//if (json.i >= 0) {
-									// let validate_pos = getPiecePosWithRoll(curr_pos, roll);
-									// if (!validate_pos) {
-									// 	console.log('cannot move piece '+json.i);
-									// 	json.i = -1;
-									// 	json.j = 0;
-									// }
-									//
-									// if (validate_pos !== next_pos) {
-									// 	console.log('invalid move piece '+json.i);
-									// 	json.i = -1;
-									// 	json.j = 0;
-									// }
-									//
-									// // Reset any opposing piece
-									// doOpposingPieceReset(next_pos);
-									//
-									// if (piecePosHasFreeRoll(next_pos) === false) {
-									// 	rolls = -1;
-									// }
+										// Send the move to the players
+										for (let i = 0; i < games[json.uuid].players.length; i++) {
+											response = JSON.stringify({
+												type: 'move',
+												uuid: json.uuid,
+												user: json.user,
+												me: json.me, // false = computer
+												i: json.i,
+												j: json.j
+											});
+											clients[i].sendUTF(response);
+											console.log((new Date()) + ' --> '
+												+ users[i] + ': ' + response);
+										}
 
-									// console.log(games[json.uuid].pieces);
-									//}
-
-									// Send the move to the players
-									for (let i = 0; i < games[json.uuid].players.length; i++) {
-										response = JSON.stringify({
-											type: 'move',
-											uuid: json.uuid,
-											user: json.user,
-											me: json.me, // false = computer
-											i: json.i,
-											j: json.j
-											// who is next roller?
-										});
-
-										clients[i].sendUTF(response);
-										console.log((new Date()) + ' --> '
-											+ users[i] + ': ' + response);
+										// Send next turn to the players
+										games[json.uuid].turn = {
+											player: nextPlayer,
+											rolls: rolls,
+											roll: getRandomInt(5)
+										};
+										// console.log(games[json.uuid].turn);
+									} else {
+										// console.log('player not allowed to request this move');
 									}
 
-
-
-
-
-
-									// temp
-									// console.log(games[json.uuid]);
-
-
-									games[json.uuid].turn = {
-										player: nextPlayer,
-										rolls: rolls,
-										roll: getRandomInt(5)
-									};
-									// console.log(games[json.uuid].turn);
-
-									// send turn
+									// Send turn
 									response = JSON.stringify({
 										type: 'turn',
 										player: games[json.uuid].turn.player,
