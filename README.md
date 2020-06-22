@@ -8,9 +8,13 @@ Written in Node.JS, using WebSockets by Alexander Gailey-White
 * Intial release
 * Waits until two players are connected, and starts a game.
 
-## Known issues
+## Todo
 
-TBC
+* Improve multi-player support. Currently only supports and engages two users in a game.
+* Improve graphics
+* Challenging - Allow players to challenge their next opponent
+* Scoring - Highscore, win-streak, etc
+* Chatbox (maybe)
 
 ## Rules
 
