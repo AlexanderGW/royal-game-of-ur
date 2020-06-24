@@ -1,5 +1,5 @@
 # The royal game of Ur
-Written in Node.JS, using WebSockets by Alexander Gailey-White
+Online multiplayer server/client. Written in JavaScript for Node.JS, with WebSockets by Alexander Gailey-White
 
 ![Game demo](https://gailey-white.com/wp-content/uploads/2020/06/royal-game-of-ur.png)
 
@@ -7,13 +7,6 @@ Written in Node.JS, using WebSockets by Alexander Gailey-White
 
 * Initial release
 * Server waits until two or more (even number of users) are connected, and spawns a game.
-
-## Todo
-
-* Improve graphics
-* Challenging - Allow players to challenge their next opponent
-* Scoring - Highscore, win-streak, etc
-* Chatbox (maybe)
 
 ## Rules
 
@@ -28,15 +21,24 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 * TO finish a piece; the roll must move to exactly fifteen (15)
 * To win; a player must get all pieces to square fifteen (15)
 
-## Development
+## Usage
 
 `npm server [1337]` to run [Websocket server](../master/server.js) on optional port number (default `1337`)
 
 `npm test [8000]` to run an HTTP server on optional port number (default `8000`) on the `src` directory <http://localhost:8000/index.htm>
 
+## Development
+
 `grunt sass` to build SASS stylesheet
 
 `grunt` to watch for SASS changes, and build
+
+## Todo
+
+* Improve graphics
+* Challenging - Allow players to challenge their next opponent
+* Scoring - Highscore, win-streak, etc
+* Chatbox (maybe)
 
 ## WSS NGINX proxy
 Using NGINX create an HTTPS WSS proxy server to encrypt WebSocket traffic
