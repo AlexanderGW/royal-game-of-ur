@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "server": "node server.js",
-    "test": "node index.js"
+    "test": "node index.js",
+    "postinstall": "grunt sass"
   },
   "repository": {
     "type": "git",
