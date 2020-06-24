@@ -13,13 +13,14 @@ const { uuid } = require('uuidv4');
 
 // Optional. You will see this name in eg. 'ps' or 'top' command
 process.title = 'game-of-ur';
+
 // Port where we'll run the websocket server
 var webSocketsServerPort = process.argv[2] || 1337;
+
 // websocket and http servers
 var webSocketServer = require('websocket').server;
+
 var http = require('http');
-
-
 
 // list of currently connected clients
 var clients = [];
@@ -107,6 +108,21 @@ function htmlEntities(str) {
 }
 
 /**
+ * Send to clients viewing game
+ */
+function sendToGameClients(gameId, json) {
+	if (gameId.length) {
+		for (let i = 0; i < users.length; i++) {
+			if (users[i].game === gameId) {
+				clients[i].sendUTF(json);
+				console.log((new Date()) + ' --> '
+					+ users[i].user + ': ' + json);
+			}
+		}
+	}
+}
+
+/**
  * HTTP server
  */
 var server = http.createServer(function(request, response) {
@@ -130,6 +146,7 @@ server.listen(webSocketsServerPort, '0.0.0.0', function() {
 	console.log((new Date()) + " Server is listening on port "
 		+ webSocketsServerPort);
 });
+
 /**
  * WebSocket server
  */
@@ -145,20 +162,23 @@ wsServer.on('request', function(request) {
 	console.log((new Date()) + ' Connection from origin '
 		+ request.origin + '.');
 
-	let userName = uuid();
+	let userId = uuid();
 
 	// accept connection - you should check 'request.origin' to
 	// make sure that client is connecting from your website
 	// (http://en.wikipedia.org/wiki/Same_origin_policy)
 	let connection = request.accept(null, request.origin);
 
-	// we need to know client index to remove them on 'close' event
-	// clients[userName] = connection;
-	var index = clients.push(connection) - 1;
-	// users.push(userName);
-	users[index] = userName;
 
-	console.log((new Date()) + ' Connection accepted ['+userName+'].');
+	var index = clients.push(connection) - 1;
+
+	users[index] = {
+		'client': index,
+		'user': userId,
+		'game': ''
+	};
+
+	console.log((new Date()) + ' Connection accepted ['+userId+'].');
 
 
 
@@ -166,54 +186,69 @@ wsServer.on('request', function(request) {
 	connection.sendUTF(
 		JSON.stringify({
 			type: 'user',
-			uuid: userName
+			uuid: userId
 		}));
 
 
 	// MATCH TWO PLAYERS FOR A GAME TEST
 	// console.log(clients.length);
-	if (clients.length === 2) {
-		let uuid = index;
+	if ((clients.length % 2) === 0) {
+		let gameId = uuid();
 		let players = [];
-		for (let i=0; i < clients.length; i++) {
-			players[i] = users[i];
-		}
-		// console.log(players);
-		games[uuid] = {
-			type: 'game',
-			uuid: uuid,
-			players: players
-		};
-		let json = JSON.stringify(games[uuid]);
-		for (let i = 0; i < clients.length; i++) {
-			clients[i].sendUTF(json);
-			console.log((new Date()) + ' --> '
-				+ users[i] + ': ' + json);
+
+		// Add two users that are not in a game
+		let i = 0;
+		for (let j = 0; j < users.length; j++) {
+			if (users[j].game.length === 0) {
+				users[j].game = gameId;
+				players[i] = users[j].user;
+				i++;
+			}
+			if (i === 2)
+				break;
 		}
 
-		let pieces = new Object();
-		pieces[players[0]] = [].fill(0, 0, 6);
-		pieces[players[1]] = [].fill(0, 0, 6);
+		// We have matched two players
+		if (i === 2) {
+			games[gameId] = {
+				type: 'game',
+				uuid: gameId,
+				players: players
+			};
+			let json = JSON.stringify(games[gameId]);
+			sendToGameClients(gameId, json);
 
-		games[uuid].moves = [];
-		games[uuid].pieces = pieces;
+			let pieces = new Object();
+			pieces[players[0]] = [].fill(0, 0, 6);
+			pieces[players[1]] = [].fill(0, 0, 6);
 
-		// temp
-		games[uuid].turn = {
-			player: getRandomInt(2),
-			roll: getRandomInt(5)
-		};
+			games[gameId].moves = [];
+			games[gameId].pieces = pieces;
 
-		// send turn
-		json = JSON.stringify({
-			type: 'turn',
-			player: games[uuid].turn.player,
-			roll: games[uuid].turn.roll
-		});
-		for (let i = 0; i < clients.length; i++) {
-			clients[i].sendUTF(json);
-			console.log((new Date()) + ' --> '
-				+ users[i] + ': ' + json);
+			// temp
+			games[gameId].turn = {
+				player: getRandomInt(2),
+				roll: getRandomInt(5)
+			};
+
+			// send turn
+			json = JSON.stringify({
+				type: 'turn',
+				player: games[gameId].turn.player,
+				roll: games[gameId].turn.roll
+			});
+			sendToGameClients(gameId, json);
+		}
+
+		// Something went wrong, clear the match lock
+		else {
+			for (let i = 0; i < players.length; i++) {
+				for (let j = 0; j < users.length; j++) {
+					if (users[players[i]].game === gameId) {
+						users[players[i]].game = '';
+					}
+				}
+			}
 		}
 	}
 
@@ -231,7 +266,7 @@ wsServer.on('request', function(request) {
 		if (message.type === 'utf8') { // accept only text
 
 			console.log((new Date()) + ' <-- '
-				+ userName + ': ' + message.utf8Data);
+				+ userId + ': ' + message.utf8Data);
 
 			try {
 				var json = JSON.parse(message.utf8Data);
@@ -246,11 +281,11 @@ wsServer.on('request', function(request) {
 							if (json.uuid in games) {
 
 								// Requesting user is in the game?
-								if (games[json.uuid].players.includes(userName)) {
+								if (games[json.uuid].players.includes(userId)) {
 
 									// Is it their turn, and should they be actioning it?
 									if (
-										games[json.uuid].players[games[json.uuid].turn.player] === userName
+										games[json.uuid].players[games[json.uuid].turn.player] === userId
 										&& games[json.uuid].players[games[json.uuid].turn.player] === json.user
 									) {
 										let nextPlayer = -1;
@@ -295,19 +330,15 @@ wsServer.on('request', function(request) {
 										games[json.uuid].moves.push(json);
 
 										// Send the move to the players
-										for (let i = 0; i < games[json.uuid].players.length; i++) {
-											response = JSON.stringify({
-												type: 'move',
-												uuid: json.uuid,
-												user: json.user,
-												me: json.me, // false = computer
-												i: json.i,
-												j: json.j
-											});
-											clients[i].sendUTF(response);
-											console.log((new Date()) + ' --> '
-												+ users[i] + ': ' + response);
-										}
+										response = JSON.stringify({
+											type: 'move',
+											uuid: json.uuid,
+											user: json.user,
+											me: json.me, // false = computer
+											i: json.i,
+											j: json.j
+										});
+										sendToGameClients(json.uuid, response);
 
 										// Send next turn to the players
 										games[json.uuid].turn = {
@@ -327,11 +358,7 @@ wsServer.on('request', function(request) {
 										rolls: games[json.uuid].turn.rolls,
 										roll: games[json.uuid].turn.roll
 									});
-									for (let i = 0; i < clients.length; i++) {
-										clients[i].sendUTF(response);
-										console.log((new Date()) + ' --> '
-											+ users[i] + ': ' + response);
-									}
+									sendToGameClients(json.uuid, response);
 								}
 							}
 							break;
@@ -349,11 +376,11 @@ wsServer.on('request', function(request) {
 
 	// user disconnected
 	connection.on('close', function(connection) {
-		if (userName !== false) {
+		if (userId !== false) {
 			console.log((new Date()) + " Peer "
 				+ connection.remoteAddress + " disconnected.");
 			// remove user from the list of connected clients
-			clients.splice(userName, 1);
+			clients.splice(userId, 1);
 		}
 	});
 });

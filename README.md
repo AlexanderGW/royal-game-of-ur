@@ -5,12 +5,11 @@ Written in Node.JS, using WebSockets by Alexander Gailey-White
 
 ## Notes
 
-* Intial release
-* Waits until two players are connected, and starts a game.
+* Initial release
+* Server waits until two or more (even number of users) are connected, and spawns a game.
 
 ## Todo
 
-* Improve multi-player support. Currently only supports and engages two users in a game.
 * Improve graphics
 * Challenging - Allow players to challenge their next opponent
 * Scoring - Highscore, win-streak, etc
