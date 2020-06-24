@@ -135,7 +135,8 @@ a {
 				background-color: rgba(0,0,255,1);
 			}
 			&.inactive > div {
-				background-color: rgba(127,127,255,.4);
+				background-color: rgba(127,127,255,.6);
+				border-color: rgba(255, 255, 255, .4);
 			}
 		}
 		> div {
@@ -149,7 +150,8 @@ a {
 				transition: all .1s ease;
 				left: 400%;
 				&.inactive > div {
-					background-color: rgba(255,127,127,.4);
+					background-color: rgba(255,127,127,.6);
+					border-color: rgba(255, 255, 255, .4);
 				}
 				&.p1 {
 					top: -100%;
