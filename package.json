@@ -1,5 +1,5 @@
 {
-  "name": "game-of-ur",
+  "name": "royal-game-of-ur",
   "version": "1.0.0",
   "description": "The royal game of Ur, written in JavaScript using Node.JS and WebSockets",
   "main": "index.js",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AlexanderGW/game-of-ur.git"
+    "url": "https://github.com/AlexanderGW/royal-game-of-ur.git"
   },
   "author": "Alexander Gailey-White",
-  "license": "ISC",
+  "license": "See LICENSE",
   "bugs": {
-    "url": "https://github.com/AlexanderGW/game-of-ur/issues"
+    "url": "https://github.com/AlexanderGW/royal-game-of-ur/issues"
   },
-  "homepage": "https://github.com/AlexanderGW/game-of-ur#readme",
+  "homepage": "https://github.com/AlexanderGW/royal-game-of-ur#readme",
   "devDependencies": {
     "grunt": "^1.0.4",
     "grunt-contrib-watch": "^1.1.0",
