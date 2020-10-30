@@ -542,6 +542,17 @@ $(function() {
 		}
 	});
 
+	/* Rotate the board 90deg clockwise */
+	$('.rotate').click(function(){
+		let view = $('.view');
+		let i = parseInt(view.data('i'));
+		i++;
+		if (i > 3)
+			i = 0;
+		console.log(i);
+		view.attr('class', 'view').addClass('r' + (90 * i));
+		view.data('i', i);
+	});
 
 
 
