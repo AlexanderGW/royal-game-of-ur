@@ -52,9 +52,18 @@ button {
 	position: absolute;
 	left: 0;
 	right: 0;
-	bottom: -4em;
-	font-size: 3em;
+	bottom: 0;
 	text-align: center;
+	padding: 2em 1em;
+	background-color: rgba(30, 30, 30, .75);
+	> div {
+		box-sizing: border-box;
+		display: inline-block;
+		vertical-align: middle;
+		background-color: transparent;
+		font-size: 2rem;
+		margin: 0 .5em;
+	}
 }
 
 .welcome {
