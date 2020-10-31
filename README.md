@@ -1,7 +1,7 @@
 # The royal game of Ur
 Online multiplayer server/client. Written in JavaScript for Node.JS, with WebSockets by Alexander Gailey-White
 
-![Game demo](https://gailey-white.com/wp-content/uploads/2020/06/royal-game-of-ur.png)
+![Game demo](https://gailey-white.com/wp-content/uploads/2020/10/Screenshot_2020-10-31-The-Royal-Game-of-Ur-Node-JS-WebSockets-edition1.png)
 
 ## Notes
 
