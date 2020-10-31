@@ -4,23 +4,20 @@
 	<meta charset="UTF-8">
 	<title>The Royal Game of Ur - Node.JS WebSockets edition</title>
 	<link href="ur.css" rel="stylesheet">
+	<meta content="width=device-width,user-scalable=yes" name="viewport">
 </head>
 <body>
 <div>
 	<div>
-<!--		<div id="user">-->
-<!--			<input type="text" name="username" value="">-->
-<!--			<button>submit</button>-->
-<!--		</div>-->
-		<div class="welcome">
+		<div class="container vertical-middle welcome show">
 			<div>
-				<h1>The royal game of Ur</h1>
+				<h1>The Royal Game of Ur</h1>
 				<p>Waiting for another player to connect...</p>
 			</div>
 		</div>
 		<div class="container game">
 			<div class="ur">
-				<div class="view" data-i="0">
+				<div class="view">
 					<div class="board">
 						<div>
 							<div></div>
@@ -77,9 +74,23 @@
 					</div>
 				</div>
 			</div>
-			<div class="debug">
+			<div class="info vertical-middle">
+				<div>
+					&nbsp;
+				</div>
+<!--				<div>-->
+<!--					<div class="state">Live</div>-->
+<!--				</div>-->
+<!--				<div>-->
+<!--					<div class="state red">Replay</div>-->
+<!--				</div>-->
+			</div>
+			<div class="info debug vertical-middle">
 				<!--	<a class="stop" href="#">stop</a>-->
 				<!--				<a class="roll" href="#" id="state">Start</a>-->
+				<div>
+					<button class="exit" title="Exit game">✕</button>
+				</div>
 				<div>
 					<button class="rotate" title="Rotate the board 90 degrees">↻</button>
 				</div>
@@ -89,8 +100,11 @@
 			</div>
 		</div>
 		<div class="container banner">
-			<div>
-				<span id="banner"></span>
+			<div class="vertical-middle">
+				<button class="exit" title="Exit game">←</button>
+				<div>
+					<span id="banner">You won!</span>
+				</div>
 			</div>
 		</div>
 	</div>

@@ -79,7 +79,7 @@ $(function() {
 
 
 				case 'game':
-					$('.welcome').hide();
+					$('.welcome').removeClass('show');
 					$('.game').addClass('show');
 
 					gameId = json.uuid;
@@ -542,16 +542,25 @@ $(function() {
 		}
 	});
 
+	// $(document).ready(function(){
+	// 	$('.welcome').hide();
+	// 	$('.game').addClass('show');
+	// 	// $('.banner').addClass('show win');
+	// });
+
+	/* Exit game view */
+	$('.exit').on('click', function(){
+		window.location.reload();
+	});
+
 	/* Rotate the board 90deg clockwise */
-	$('.rotate').click(function(){
+	var rotation = 0;
+	$('.rotate').on('click', function(){
 		let view = $('.view');
-		let i = parseInt(view.data('i'));
-		i++;
-		if (i > 3)
-			i = 0;
-		console.log(i);
-		view.attr('class', 'view').addClass('r' + (90 * i));
-		view.data('i', i);
+		rotation++;
+		if (rotation > 3)
+			rotation = 0;
+		view.attr('class', 'view').addClass('r' + (90 * rotation));
 	});
 
 

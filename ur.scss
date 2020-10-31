@@ -36,11 +36,12 @@ a {
 }
 
 button {
+	cursor: pointer;
 	box-sizing: border-box;
 	background-color: transparent;
 	border: .125em solid #444;
 	border-radius: .25em;
-	font-size: 2rem;
+	font-size: 1.5rem;
 	color: #666;
 	&:focus, &:hover {
 		border-color: #666;
@@ -48,30 +49,67 @@ button {
 	}
 }
 
-.debug {
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	text-align: center;
-	padding: 2em 1em;
-	background-color: rgba(30, 30, 30, .75);
-	> div {
+.vertical-middle {
+	> * {
 		box-sizing: border-box;
 		display: inline-block;
 		vertical-align: middle;
-		background-color: transparent;
-		font-size: 2rem;
-		margin: 0 .5em;
 	}
+}
+
+.info {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	text-align: center;
+	padding: .5em;
+	background-color: rgba(30, 30, 30, .75);
+	@media (min-width: 700px) and (min-height: 600px) {
+		padding: 1em;
+	}
+	> div {
+		background-color: transparent;
+		font-size: 1.5rem;
+		margin: 0 .5em;
+		@media (min-width: 700px) and (min-height: 600px) {
+			font-size: 2rem;
+		}
+	}
+	.state {
+		box-sizing: border-box;
+		border: .125em solid #05c605;
+		color: #05c605;
+		border-radius: .5em;
+		font-size: 1.125rem;
+		padding: .25em .5em;
+		text-transform: uppercase;
+		&.red {
+			border: .125em solid #c60505;
+			color: #c60505;
+		}
+	}
+}
+
+.debug {
+	top: initial;
+	bottom: 0;
+}
+
+@mixin abs-center {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	right: 0;
+	width: 100%;
+	transform: translate(0%, -50%);
+	box-sizing: border-box;
+	text-align: center;
 }
 
 .welcome {
 	> div {
-		margin: 5em auto 0;
-		width: 60%;
-		max-width: 64em;
-		text-align: center;
+		@include abs-center;
 	}
 }
 
@@ -90,17 +128,19 @@ button {
 .banner {
 	background-color: rgba(0, 0, 0, .75);
 	> div {
-		position: absolute;
-		top: 42.5%;
-		left: 50%;
-		width: 50%;
-		transform: translate(-50%, -50%);
-		box-sizing: border-box;
-		text-align: center;
+		@include abs-center;
 		font-size: 4em;
-		font-weight: 700;
 		padding: 1em;
 		color: #fff;
+		> div {
+			display: inline-block;
+			vertical-align: middle;
+			margin: 0 .5em;
+		}
+		button {
+			border-color: #fff;
+			color: #fff;
+		}
 	}
 	&.win > div {
 		background-color: rgba(0, 128, 0, 0.8);
@@ -112,12 +152,18 @@ button {
 
 .ur {
 	position: absolute;
-	top: 42.5%;
+	top: 50%;
 	left: 50%;
-	transform: translate(-50%, -50%) scale(.75);
+	transform: translate(-50%, -50%) scale(.4);
 	box-sizing: border-box;
 	width: 800px;
 	height: 300px;
+	@media (min-width: 550px) {
+		transform: translate(-50%, -50%) scale(.5);
+	}
+	@media (min-width: 700px) and (min-height: 600px) {
+		transform: translate(-50%, -50%) scale(.75);
+	}
 	.board {
 		box-sizing: border-box;
 		display: table;
