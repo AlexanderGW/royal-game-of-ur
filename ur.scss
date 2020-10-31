@@ -106,7 +106,7 @@ button {
 		background-color: rgba(0, 128, 0, 0.8);
 	}
 	&.lose > div {
-		background-color: rgba(255, 0, 0, 0.8);
+		background-color: rgba(189, 6, 6, 0.8);
 	}
 }
 
@@ -150,7 +150,7 @@ button {
 			&:nth-child(2) {
 				/* War */
 				> div {
-					background-color: rgba(255,0,0,.5);
+					background-color: rgba(189, 6, 6,.5);
 					/* War rosette */
 					&:nth-child(4) {
 						background-color: rgba(128,0,0,.5);
@@ -175,7 +175,7 @@ button {
 		bottom: 0;
 		&.enemy > div > div {
 			> div {
-				background-color: rgba(0,0,255,1);
+				background-color: rgba(0,0,189,1);
 			}
 			&.inactive > div {
 				background-color: rgba(127,127,255,.6);
@@ -263,7 +263,7 @@ button {
 					width: 60%;
 					height: 60%;
 					border-radius: 50%;
-					background-color: rgba(255,0,0,1);
+					background-color: rgba(189, 6, 6, 1);
 					border: .125em solid white;
 					box-sizing: border-box;
 				}
