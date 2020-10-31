@@ -14,7 +14,7 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 
 * Two players take turns rolling the dice
 * First player randomly selected
-* Pieces move clockwise around the board, through green, up along red, then down into the blue squares
+* Pieces move clockwise around the board, through blue, up along red, then down into the green squares
 * Player moves one of their available pieces, based on dice roll
 * Landing on a rosette (darker squares) grants another roll
 * A player can attack opposing pieces within the red squares, resetting that piece back to square zero (0), unless opposing piece is on the rosette, in which they're protected from attack

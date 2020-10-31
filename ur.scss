@@ -3,11 +3,11 @@ body {
 	padding: 0;
 	font-family: sans-serif;
 	background-color: #000;
-	color: #fff;
+	color: #ccc;
 }
 
 a {
-	color: #fff;
+	color: #ccc;
 }
 
 .view {
@@ -183,7 +183,7 @@ button {
 							bottom: 0;
 							right: -.25em;
 							width: .25em;
-							background-color: #ccc;
+							background-color: #999;
 							height: 200%;
 						}
 					}
@@ -199,7 +199,7 @@ button {
 							top: 0;
 							right: -.25em;
 							width: .25em;
-							background-color: #ccc;
+							background-color: #999;
 							height: 200%;
 						}
 					}
@@ -209,37 +209,37 @@ button {
 				> div {
 					/* Prepare rosette */
 					&:nth-child(1) {
-						background-color: rgba(0,128,0,.5);
+						background-color: rgba(75, 75, 149, 0.5);
 					}
 					/* Empty */
 					&:nth-child(5), &:nth-child(6) {
-						background-color: rgba(255,255,255,.5);
+						background-color: transparent;
 					}
 					/* Safe rosette */
 					&:nth-child(7) {
-						background-color: rgba(0,0,128,.5);
+						background-color: rgba(0,128,0,.5);
 					}
 					/* Safe */
 					&:nth-child(8) {
-						background-color: rgba(0,0,255,.5);
+						background-color: rgba(87, 170, 87, .5);
 					}
 				}
 			}
 			&:nth-child(2) {
 				/* War */
 				> div {
-					background-color: rgba(189, 6, 6,.5);
+					background-color: rgba(170, 87, 87,.5);
 					/* War rosette */
 					&:nth-child(4) {
-						background-color: rgba(128,0,0,.5);
+						background-color: rgba(142, 64, 64, 0.5);
 					}
 				}
 			}
 			/* Prepare */
 			> div {
 				display: table-cell;
-				background-color: rgba(0,255,0,.5);
-				border: .125em solid rgba(55, 55, 55, 0.5);
+				background-color: rgba(105, 105, 198, 0.5);
+				border: .125em solid rgba(30, 30, 30, 0.5);
 			}
 		}
 	}
@@ -256,8 +256,8 @@ button {
 				background-color: rgba(0,0,189,1);
 			}
 			&.inactive > div {
-				background-color: rgba(127,127,255,.6);
-				border-color: rgba(255, 255, 255, .4);
+				background-color: rgb(82, 82, 117);
+				border-color: rgb(167, 167, 167);
 			}
 		}
 		> div {
@@ -268,11 +268,11 @@ button {
 				width: 100%;
 				height: 100%;
 				position: absolute;
-				transition: all .1s ease;
+				transition: all .25s ease;
 				left: 400%;
 				&.inactive > div {
-					background-color: rgba(255,127,127,.6);
-					border-color: rgba(255, 255, 255, .4);
+					background-color: rgb(117, 82, 82);
+					border-color: rgb(167, 167, 167);
 				}
 				&.p1 {
 					top: -100%;
@@ -344,6 +344,7 @@ button {
 					background-color: rgba(189, 6, 6, 1);
 					border: .125em solid white;
 					box-sizing: border-box;
+					transition: all .25s ease;
 				}
 			}
 		}
