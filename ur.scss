@@ -127,6 +127,38 @@ button {
 		overflow: hidden;
 		> div {
 			display: table-row;
+			&:nth-child(1) {
+				> div {
+					&:nth-child(5) {
+						position: relative;
+						&:after {
+							content: '';
+							position: absolute;
+							bottom: 0;
+							right: -.25em;
+							width: .25em;
+							background-color: #ccc;
+							height: 200%;
+						}
+					}
+				}
+			}
+			&:nth-child(3) {
+				> div {
+					&:nth-child(5) {
+						position: relative;
+						&:after {
+							content: '';
+							position: absolute;
+							top: 0;
+							right: -.25em;
+							width: .25em;
+							background-color: #ccc;
+							height: 200%;
+						}
+					}
+				}
+			}
 			&:nth-child(1), &:nth-child(3) {
 				> div {
 					/* Prepare rosette */
