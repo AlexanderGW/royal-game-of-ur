@@ -1,5 +1,5 @@
-# The royal game of Ur
-Online multiplayer server/client. Written in JavaScript for Node.JS, with WebSockets by Alexander Gailey-White
+# Royal Game of Ur
+Online multiplayer server (Node.JS) & client (jQuery), using WebSockets by Alexander Gailey-White
 
 ![Game demo](https://gailey-white.com/wp-content/uploads/2020/10/Screenshot_2020-10-31-The-Royal-Game-of-Ur-Node-JS-WebSockets-edition1.png)
 
@@ -18,7 +18,7 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 * Player moves one of their available pieces, based on dice roll
 * Landing on a rosette (darker squares) grants another roll
 * A player can attack opposing pieces within the red squares, resetting that piece back to square zero (0), unless opposing piece is on the rosette, in which they're protected from attack
-* TO finish a piece; the roll must move to exactly fifteen (15)
+* To finish a piece; the roll must move (exactly) to square fifteen (15)
 * To win; a player must get all pieces to square fifteen (15)
 
 ## Usage
@@ -38,6 +38,7 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 * Improve graphics
 * Challenging - Allow players to challenge their next opponent
 * Scoring - Highscore, win-streak, etc
+* React?
 * Chatbox (maybe)
 
 ## WSS NGINX proxy
