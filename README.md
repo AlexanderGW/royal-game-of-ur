@@ -1,5 +1,5 @@
 # Royal Game of Ur
-Online multiplayer server (Node.JS) & client (jQuery), using WebSockets by Alexander Gailey-White
+Online multiplayer server (Node.Js) & client (Next.Js), written in TypeScript, using WebSockets, by Alexander Gailey-White
 
 ![Game demo](https://gailey-white.com/wp-content/uploads/2020/10/Screenshot_2020-10-31-The-Royal-Game-of-Ur-Node-JS-WebSockets-edition1.png)
 
@@ -23,22 +23,17 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 
 ## Usage
 
-`npm server [1337]` to run [Websocket server](../master/server.js) on optional port number (default `1337`)
+`pnpm run server [1337]` to run [Websocket server](./server.ts) on optional port number (default `1337`)
 
-`npm test [8000]` to run an HTTP server on optional port number (default `8000`) on the `src` directory <http://localhost:8000/index.htm>
+`pnpm dev` to dev build and run the Next.Js frontend.
 
-## Development
-
-`grunt sass` to build SASS stylesheet
-
-`grunt` to watch for SASS changes, and build
+`pnpm run serve` to build and run a production version of the frontend.
 
 ## Todo
 
 * Improve graphics
 * Challenging - Allow players to challenge their next opponent
 * Scoring - Highscore, win-streak, etc
-* React?
 * Chatbox (maybe)
 
 ## WSS NGINX proxy

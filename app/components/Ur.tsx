@@ -1,0 +1,188 @@
+import React from 'react';
+import { TOTAL_PIECES, useGame } from '../UrContext';
+import { ServerMessageGame, ServerMessageMove, ServerMessageTurn, ServerMessageUser } from '../page';
+import { stylex } from '@stylexjs/stylex';
+import { Piece } from './Piece';
+
+export type UrProps = {
+  // key: number,
+  // mode: number,
+  // player: number,
+  // move?: CallableFunction,
+};
+
+export const Ur: React.FC<UrProps> = (props) => {
+  // const boardInactivePieceOffset = -100;
+  // const boardInactivePiecePadding = 20;
+  // const intervalGameTest = 1000;
+
+  const { state, dispatch } = useGame();
+
+  const [messages, setMessages] = React.useState<(ServerMessageMove | ServerMessageGame | ServerMessageTurn | ServerMessageUser)[]>([]);
+
+  const requestMove = (i: number) => {
+    console.log(`Move ${i}`);
+    const request: ServerMessageMove = {
+      type: 'move',
+      uuid: state.game?.uuid ?? '',
+      player: Number(state.game?.players.indexOf(state.user?.uuid ?? '')),
+      piece: i,
+      roll: state.game?.turn.roll ?? 0,
+    };
+    console.log(request);
+    state.socket?.send(JSON.stringify(request));
+  };
+
+  React.useEffect(() => {
+    const socket = new WebSocket(`${process.env.NEXT_PUBLIC_UR_SOCKET_SCHEME}://${process.env.NEXT_PUBLIC_UR_SOCKET_HOSTNAME}:${process.env.NEXT_PUBLIC_UR_SOCKET_PORT}`);
+
+    dispatch({
+      type: 'CONNECT',
+      payload: socket,
+    });
+
+    // socket.onopen = function () {};
+
+    socket.onmessage = (event) => {
+      const message:
+        ServerMessageMove
+        | ServerMessageGame
+        | ServerMessageTurn
+        | ServerMessageUser
+        = JSON.parse(event.data);
+
+      // console.log(`Incoming message`);
+      // console.log(message);
+      setMessages((prevMessages) => [...prevMessages, message]);
+
+      try {
+        if (!message.hasOwnProperty('type')) {
+          throw new Error(`Unknown type`);
+        }
+
+        switch (message.type) {
+          case 'game':
+            dispatch({
+              type: 'GAME',
+              payload: message,
+            });
+            break;
+
+          case 'user':
+            dispatch({
+              type: 'USER',
+              payload: message,
+            });
+            break;
+
+          case 'move':
+            dispatch({
+              type: 'MOVE',
+              payload: message,
+            });
+            break;
+
+          case 'turn':
+            dispatch({
+              type: 'TURN',
+              payload: message,
+            });
+            break;
+        }
+      } catch (e) {
+        console.error(e);
+        return;
+      }
+    };
+
+    socket.onerror = function (error) {
+      // an error occurred when sending/receiving data
+      console.error('Connection Error');
+      console.error(error);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
+
+  if (!state.game) {
+    return (
+      <><p>Waiting for another player...</p></>
+    )
+  }
+
+  const ourPlayerIdx = Number(state.game?.players.indexOf(state.user?.uuid ?? state.game.players[0]));
+  const thierPlayerIdx = ourPlayerIdx ? 0 : 1;
+
+  // const ourPieces = game?.pieces[ourPlayerIdx];
+  // const thierPieces = game?.pieces[thierPlayerIdx];
+
+  return (
+    <div>
+      <ul className="messages">
+        {messages.map((message, index) => (
+          <li key={index}>{JSON.stringify(message)}</li>
+        ))}
+      </ul>
+      <div className="container game">
+        <div className="ur">
+          <div className="view">
+            <div className="board">
+              {Array(3).fill(0).map((v, i) =>
+                <div key={i}>
+                  {Array(8).fill(0).map((v, j) =>
+                    <div key={j}></div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="pieces">
+              <div>
+                {Array(TOTAL_PIECES).fill(0).map((v, i) =>
+                  <Piece
+                    index={i}
+                    key={i}
+                    player={ourPlayerIdx}
+                    mode={ourPlayerIdx === state.game?.turn.player ? 1 : 0}
+                    move={() => requestMove(i)}
+                  />
+                )}
+              </div>
+            </div>
+            <div className="pieces enemy">
+              <div>
+                {Array(TOTAL_PIECES).fill(0).map((v, i) =>
+                  <Piece
+                    index={i}
+                    key={i}
+                    player={thierPlayerIdx}
+                    mode={-1}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="info vertical-middle">
+          <div>
+            &nbsp;
+          </div>
+        </div>
+        <div className="info debug vertical-middle">
+          <div>
+            <button className="exit" title="Exit game">✕</button>
+          </div>
+          <div>
+            <button className="rotate" title="Rotate the board 90 degrees">↻</button>
+          </div>
+          <div>
+            <span id="state">{state.game ? (
+              `${state.game.turn.player === ourPlayerIdx ? 'we' : 'they'} rolled ${state.game.turn.roll}`
+            ) : 'Start'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
