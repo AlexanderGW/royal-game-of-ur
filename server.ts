@@ -113,8 +113,8 @@ function validateGamePiecePosWithRoll(
 	piece: number,
 	currPos: number,
 	roll: number
-) {
-	console.log(`INFO: Game ${games[gameIndex].uuid}, piece ${piece} at ${currPos} rolled ${roll}`);
+): number {
+	// console.log(`INFO: Game ${games[gameIndex].uuid}, piece ${piece} at ${currPos} rolled ${roll}`);
 
 	// We are attempting a piece move
 	if (roll > 0) {
