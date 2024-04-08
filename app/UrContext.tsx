@@ -96,96 +96,109 @@ function reducer(
       };
 
       // Auto-continue after rolling a zero
-      if (
-        action.payload.roll === 0
-        && newState.game?.players[action.payload.player] === newState.user?.uuid
-      ) {
-        setTimeout(() => {
-          console.log(`Rolled zero`);
-          const request: ServerMessageMove = {
-            type: 'move',
-            uuid: newState.game?.uuid ?? '',
-            player: Number(newState.game?.players.indexOf(newState.user?.uuid ?? '')),
-            piece: 0,
-            roll: 0,
-          };
-          console.log(request);
-          newState.socket?.send(JSON.stringify(request));
-        }, 1000);
+      if (newState.game && newState.game.players[action.payload.player] === newState.user?.uuid) {
+        let skipMove = false;
+
+        if (action.payload.roll === 0)
+          skipMove = true;
+        else {
+          try {
+            let pieceMovable: number[] = [];
+
+            const playerIndex = newState.game?.turn.player;
+  
+            // Check position is not occupied by another own piece
+            let ourPieces = newState.game?.pieces[playerIndex];
+            if (!ourPieces)
+              throw new Error(`Invalid game piece data`);
+
+            if (typeof newState.game?.turn.roll === 'undefined')
+              throw new Error(`Invalid game turn data`);
+
+            const opposingPlayerIndex = (playerIndex === 0 ? 1 : 0);
+            const opposingPieces = newState.game?.pieces[opposingPlayerIndex];
+  
+            for (let i = 0; i < TOTAL_PIECES; i++) {
+              const piece = newState.game?.pieces[newState.game?.turn.player][i];
+              const nextPos = piece.position + newState.game?.turn.roll;
+
+              let isMovable = true;
+      
+              // Piece can not be moved this many spaces
+              if (nextPos > 15)
+                isMovable = false;
+    
+              if (ourPieces.length) {
+                for (let j = 0; j < ourPieces.length; j++) {
+                  if (ourPieces[j].position === nextPos && nextPos < 15) {
+                    // throw new Error(`Illegal move: Piece ${j} at ${piece.position} to ${nextPos}`);
+                    console.error(`Illegal move: Piece ${j} at ${piece.position} to ${nextPos}`);
+                    isMovable = false;
+                  }
+                }
+              }
+    
+              // Traversing the gauntlet
+              if (nextPos > 4 && nextPos < 13) {
+                if (opposingPieces?.length) {
+                  for (let j = 0; j < opposingPieces.length; j++) {
+    
+                    // Hit opposing piece
+                    if (opposingPieces[j].position === nextPos) {
+    
+                      // They're protected on this rosette
+                      if (nextPos === 8)
+                        isMovable = false;
+                    }
+                  }
+                }
+              }
+  
+              if (isMovable)
+                pieceMovable.push(i);
+              else {
+                newState.game.pieces[playerIndex][i] = {
+                  position: newState.game.pieces[playerIndex][i].position ?? 0,
+                  mode: 1,
+                };
+              }
+            }
+  
+            // Can't move
+            if (pieceMovable.length === 0)
+              skipMove = true;
+            else {
+              console.log(`pieceMovable`);
+              console.log(pieceMovable);
+              for (let i = 0; i < pieceMovable.length; i++) {
+                const piece = pieceMovable[i];
+                console.log(`Piece: ${piece}`);
+                newState.game.pieces[playerIndex][piece] = {
+                  position: newState.game.pieces[playerIndex][piece].position ?? 0,
+                  mode: 2,
+                };
+              }
+            }
+          } catch (data: any) {
+            const error: Error = data;
+            console.error(error.message);
+          }
+        }
+
+        if (skipMove) {
+          setTimeout(() => {
+            console.log(`skipMove`);
+            const request: ServerMessageMove = {
+              type: 'move',
+              uuid: newState.game?.uuid ?? '',
+              player: Number(newState.game?.players.indexOf(newState.user?.uuid ?? '')),
+              piece: 0,
+              roll: 0,
+            };
+            newState.socket?.send(JSON.stringify(request));
+          }, 1000);
+        }
       }
-
-      // if (newState.game?.turn.player) {
-      //   const playerUuid = state.game?.players[newState.game?.turn.player];
-      //   const me = playerUuid === state.user?.uuid;
-      //   if (me) {
-      //     let totalInactive = 0;
-
-      //     for (let i = 0; i < TOTAL_PIECES; i++) {
-      //       let mode = 0;
-      //       const piece = newState.game?.pieces[newState.game?.turn.player][i]
-      //       if (!piece.position) continue;
-            
-      //       // console.log('piece '+i+' at ' + currPos + ' rolling ' + newState.game?.turn.roll);
-    
-      //       // We are attempting a piece move
-      //       if (typeof newState.game?.turn.roll !== 'undefined' && newState.game?.turn.roll > 0) {
-      //         let nextPos = piece.position + newState.game?.turn.roll;
-    
-      //         // Piece can not be moved this many spaces
-      //         if (nextPos > 15) continue;
-    
-      //         const playerIndex = state.game?.turn.player;
-      //         if (!playerIndex) continue;
-    
-      //         // Check position is not occupied by another own piece
-      //         let ourPieces = state.game?.pieces[playerIndex];
-      //         if (!ourPieces) continue;
-    
-      //         if (ourPieces.length) {
-      //           for (let i = 0; i < ourPieces.length; i++) {
-      //             if (ourPieces[i].position === nextPos && nextPos < 15) {
-      //               console.log('cannot move piece ' + i + ' at '+piece.position+' to ' + nextPos);
-      //               continue;
-      //             }
-      //           }
-      //         }
-    
-      //         // Traversing the gauntlet
-      //         if (nextPos > 4 && nextPos < 13) {
-      //           let opposingPlayerIndex = (playerIndex === 0 ? 1 : 0);
-      //           let opposingPieces = state.game?.pieces[opposingPlayerIndex];
-      //           if (!opposingPieces)
-      //             return 0;
-    
-      //           if (opposingPieces.length) {
-      //             for (let i = 0; i < opposingPieces.length; i++) {
-    
-      //               // Hit opposing piece
-      //               if (opposingPieces[i] === nextPos) {
-    
-      //                 // They're protected on this rosette, cannot move k spaces to j
-      //                 if (nextPos === 8)
-      //                   return 0;
-    
-      //                 // Reset opposing piece
-      //                 // console.log('reset opposing piece '+nextPos);
-      //                 if (state.game)
-      //                   newState.game.pieces[opposingPlayerIndex][i].position = 0;
-      //               }
-      //             }
-      //           }
-      //         }
-    
-      //         // Move piece to new position on board
-      //         // console.log('can move piece ' + piece + ' at '+currPos+' to ' + nextPos);
-      //         return nextPos;
-      //       }
-    
-      //       // No moves possible
-      //       return 0;
-      //     }
-      //   }
-      // }
 
       console.log(newState);
 

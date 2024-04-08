@@ -20,9 +20,9 @@ export const Piece: React.FC<PieceProps> = (props) => {
 
   return (
     <div
-      className={`p${state.game?.pieces[props.player][props.index].position ?? 0}`}
+      className={`p${state.game?.pieces[props.player][props.index].position ?? 0} m${props.mode}`}
       onClick={(): boolean => {
-        if (props.mode !== 1) return false;
+        if (props.mode === 0) return false;
         if (props.move) {
           props.move();
         }

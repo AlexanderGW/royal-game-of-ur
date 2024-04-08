@@ -21,7 +21,7 @@ export const Ur: React.FC<UrProps> = (props) => {
   const [messages, setMessages] = React.useState<(ServerMessageMove | ServerMessageGame | ServerMessageTurn | ServerMessageUser)[]>([]);
 
   const requestMove = (i: number) => {
-    console.log(`Move ${i}`);
+    console.log(`Request move: ${i}`);
     const request: ServerMessageMove = {
       type: 'move',
       uuid: state.game?.uuid ?? '',
@@ -29,7 +29,7 @@ export const Ur: React.FC<UrProps> = (props) => {
       piece: i,
       roll: state.game?.turn.roll ?? 0,
     };
-    console.log(request);
+    // console.log(request);
     state.socket?.send(JSON.stringify(request));
   };
 
@@ -89,9 +89,9 @@ export const Ur: React.FC<UrProps> = (props) => {
             });
             break;
         }
-      } catch (e) {
-        console.error(e);
-        return;
+      } catch (data: any) {
+        const error: Error = data;
+        console.error(error.message);
       }
     };
 
@@ -144,7 +144,7 @@ export const Ur: React.FC<UrProps> = (props) => {
                     index={i}
                     key={i}
                     player={ourPlayerIdx}
-                    mode={ourPlayerIdx === state.game?.turn.player ? 1 : 0}
+                    mode={ourPlayerIdx === state.game?.turn.player ? state.game.pieces[state.game.turn.player][i].mode ?? 0 : 0}
                     move={() => requestMove(i)}
                   />
                 )}
@@ -157,7 +157,7 @@ export const Ur: React.FC<UrProps> = (props) => {
                     index={i}
                     key={i}
                     player={thierPlayerIdx}
-                    mode={-1}
+                    mode={0}
                   />
                 )}
               </div>

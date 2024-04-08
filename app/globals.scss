@@ -16,6 +16,17 @@ a {
 
 .messages {
   background-color: maroon;
+	font-size: .75em;
+}
+
+@keyframes piece-beacon {
+	from {
+		background-color: rgb(189, 6, 6);
+	}
+
+	to {
+		background-color: rgb(255, 125, 103);
+	}
 }
 
 .view {
@@ -263,7 +274,7 @@ button {
 			> div {
 				background-color: rgba(0,0,189,1);
 			}
-			&.inactive > div {
+			&.m0 > div {
 				background-color: rgb(82, 82, 117);
 				border-color: rgb(167, 167, 167);
 			}
@@ -278,9 +289,12 @@ button {
 				position: absolute;
 				transition: all .25s ease;
 				left: 400%;
-				&.inactive > div {
+				&.m0 > div {
 					background-color: rgb(117, 82, 82);
 					border-color: rgb(167, 167, 167);
+				}
+				&.m2 > div {
+					animation: piece-beacon .75s ease 5s infinite alternate backwards;
 				}
 				&.p1 {
 					top: -100%;
@@ -349,10 +363,11 @@ button {
 					width: 60%;
 					height: 60%;
 					border-radius: 50%;
-					background-color: rgba(189, 6, 6, 1);
+					background-color: rgb(189, 6, 6);
 					border: .125em solid white;
 					box-sizing: border-box;
 					transition: all .25s ease;
+					animation-delay: 0;
 				}
 			}
 		}
