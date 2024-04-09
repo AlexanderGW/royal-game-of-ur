@@ -386,68 +386,54 @@ wsServer.on('connection', function(socket, request) {
 						throw new Error(`Not their turn`);
 					}
 
-					// Invalid position
-					if (json.piece < 0) {
-						throw new Error(`Invalid piece`);
-					}
-
-					// Invalid position
-					if (!game.pieces[game.turn.player]) {
-						throw new Error(`Invalid player data`);
-					}
-
-					const currPos = Number(game.pieces[game.turn.player][json.piece]);
-
-					// Invalid piece
-					if (!game.pieces[game.turn.player]) {
-						throw new Error(`Invalid piece data`);
-					}
-					// console.log(`currPlayer`);
-					// console.log(currPlayer);
-					// console.log(`game.pieces`);
-					// console.log(game.pieces);
-					// console.log(`currPos`);
-					// console.log(currPos);
-					// console.log(json);
-
-					// Get final position, based on current position, and roll
-					const finalPos = validateGamePiecePosWithRoll(
-						gameIndex,
-						json.piece,
-						currPos,
-						game.turn.roll
-					);
-					// console.log(`finalPos`);
-					// console.log(finalPos);
-
+					let finalPos = -1;
 					let nextPlayer = -1;
-					// let nextPos = 0;
 					let rolls = 0;
-
-					// Player piece move validated
-					if (finalPos !== (currPos + game.turn.roll)) {
-						throw new Error(`Invalid move`);
+					
+					// Moving a piece
+					if (json.piece >= 0) {
+						if (!game.pieces[game.turn.player]) {
+							throw new Error(`Invalid player data`);
+						}
+	
+						const currPos = Number(game.pieces[game.turn.player][json.piece]);
+	
+						// Invalid piece
+						if (!game.pieces[game.turn.player]) {
+							throw new Error(`Invalid piece data`);
+						}
+	
+						// Get final position, based on current position, and roll
+						finalPos = validateGamePiecePosWithRoll(
+							gameIndex,
+							json.piece,
+							currPos,
+							game.turn.roll
+						);
+	
+						// Player piece move validated
+						if (
+							json.piece >= 0
+							&& finalPos !== (currPos + game.turn.roll)
+						) {
+							throw new Error(`Invalid move`);
+						}
+	
+						if (json.piece >= 0)
+							games[gameIndex].pieces[game.turn.player][json.piece] = finalPos;
+	
+						// Can same player roll again?
+						if (
+							piecePosHasFreeRoll(finalPos) === true
+							&& game.turn.rolls < 4
+						) {
+							rolls = game.turn.rolls;
+							nextPlayer = game.turn.player === 0 ? 0 : 1;
+						}
+						// console.log(rolls);
+	
+						rolls++;
 					}
-
-					// nextPos = (
-					// 	currPos + json.j < 0
-					// 	? 0
-					// 	: json.j
-					// );
-
-					games[gameIndex].pieces[game.turn.player][json.piece] = finalPos;
-
-					// Can same player roll again?
-					if (
-						piecePosHasFreeRoll(finalPos) === true
-						&& game.turn.rolls < 4
-					) {
-						rolls = game.turn.rolls;
-						nextPlayer = game.turn.player === 0 ? 0 : 1;
-					}
-					// console.log(rolls);
-
-					rolls++;
 
 					// Switch player
 					if (nextPlayer < 0)
@@ -461,7 +447,6 @@ wsServer.on('connection', function(socket, request) {
 						type: 'move',
 						uuid: json.uuid,
 						player: json.player,
-						// me: json.me, // false = computer
 						piece: json.piece,
 						roll: finalPos
 					};

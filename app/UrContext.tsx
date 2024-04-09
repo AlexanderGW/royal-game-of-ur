@@ -52,10 +52,12 @@ function reducer(
       return newState;
 
     case 'MOVE':
-      const nextPos = action.payload.roll;
+      if (
+        newState.game
+        && action.payload.piece >= 0
+      ) {
+        const nextPos = action.payload.roll;
 
-      // Update piece
-      if (newState.game) {
         if (action.payload.player >= 0) {
           newState.game.pieces[action.payload.player][action.payload.piece] = {
             position: nextPos,
@@ -99,9 +101,10 @@ function reducer(
       if (newState.game && newState.game.players[action.payload.player] === newState.user?.uuid) {
         let skipMove = false;
 
-        if (action.payload.roll === 0)
+        if (action.payload.roll === 0) {
+          console.log(`Rolled a zero`);
           skipMove = true;
-        else {
+        } else {
           try {
             let pieceMovable: number[] = [];
 
@@ -165,9 +168,10 @@ function reducer(
             }
   
             // Can't move
-            if (pieceMovable.length === 0)
+            if (pieceMovable.length === 0) {
+              console.log(`Can't move any pieces`);
               skipMove = true;
-            else {
+            } else {
               console.log(`pieceMovable`);
               console.log(pieceMovable);
               for (let i = 0; i < pieceMovable.length; i++) {
@@ -192,11 +196,11 @@ function reducer(
               type: 'move',
               uuid: newState.game?.uuid ?? '',
               player: Number(newState.game?.players.indexOf(newState.user?.uuid ?? '')),
-              piece: 0,
+              piece: -1,
               roll: 0,
             };
             newState.socket?.send(JSON.stringify(request));
-          }, 1000);
+          }, 2000);
         }
       }
 
