@@ -142,6 +142,9 @@ export const Ur: React.FC<UrProps> = (props) => {
   console.log(`theirFinishedPieces`);
   console.log(theirFinishedPieces);
 
+  const weWon = ourFinishedPieces.length === TOTAL_PIECES;
+  const theyWon = theirFinishedPieces.length === TOTAL_PIECES;
+
   return (
     <div>
       <div className="container game">
@@ -215,6 +218,17 @@ export const Ur: React.FC<UrProps> = (props) => {
             <span id="state">{state.game ? (
               `${state.game.turn.player === ourPlayerIdx ? 'we' : 'they'} rolled ${state.game.turn.roll}`
             ) : 'Start'}</span>
+          </div>
+        </div>
+        <div
+          className="container banner"
+          style={{display: !state.game.state || weWon || theyWon ? 'block' : 'none'}}
+        >
+          <div className="vertical-middle">
+            <button className="exit" title="Exit game">←</button>
+            <div>
+              <span id="banner">{weWon ? `You won!` : (theyWon ? `They won!` : 'Game ended' )}</span>
+            </div>
           </div>
         </div>
       </div>
