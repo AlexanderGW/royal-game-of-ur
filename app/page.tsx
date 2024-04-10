@@ -24,6 +24,7 @@ export type Players = string[];
 export type Game = {
 	players: Players,
 	uuid: string,
+	state: number,
 	pieces: Pieces,
 	moves: ClientMessage[],
 	turn: {
@@ -54,6 +55,7 @@ export type ServerMessageMove = {
 export type ServerMessageGame = {
 	type: 'game',
 	players: Players,
+	state: number,
 	uuid: string,
 	pieces: PiecePositions,
 	moves: ClientMessage[],

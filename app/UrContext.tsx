@@ -85,6 +85,7 @@ function reducer(
       newState = {
         ...newState,
         game: {
+          state: state.game?.state ?? 0,
           players: state.game?.players ?? [],
           uuid: state.game?.uuid ?? '',
           pieces: state.game?.pieces ?? [],
@@ -221,6 +222,7 @@ function reducer(
       }
 
       newState.game = {
+        state: action.payload.state,
         players: action.payload.players,
         uuid: action.payload.uuid,
         pieces: pieces,
