@@ -7,6 +7,7 @@ export type PieceProps = {
   mode: number,
   player: number,
   move?: CallableFunction,
+  offset?: number,
 };
 
 export const Piece: React.FC<PieceProps> = (props) => {
@@ -28,6 +29,6 @@ export const Piece: React.FC<PieceProps> = (props) => {
         }
         return true;
       }}
-    ><div></div></div>
+    ><div style={{ top: `${Number(props.offset) + 20}%`, zIndex: 100 - props.index }}></div></div>
   )
 };

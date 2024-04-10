@@ -12,8 +12,8 @@ export type UrProps = {
 };
 
 export const Ur: React.FC<UrProps> = (props) => {
-  // const boardInactivePieceOffset = -100;
-  // const boardInactivePiecePadding = 20;
+  const boardPieceOffset = -100;
+  const boardInactivePiecePadding = 20;
   // const intervalGameTest = 1000;
 
   const { state, dispatch } = useGame();
@@ -113,10 +113,34 @@ export const Ur: React.FC<UrProps> = (props) => {
   }
 
   const ourPlayerIdx = Number(state.game?.players.indexOf(state.user?.uuid ?? state.game.players[0]));
-  const thierPlayerIdx = ourPlayerIdx ? 0 : 1;
+  console.log(`ourPlayerIdx: ${ourPlayerIdx}`);
 
-  // const ourPieces = game?.pieces[ourPlayerIdx];
-  // const thierPieces = game?.pieces[thierPlayerIdx];
+  const ourStartingPieces = state.game.pieces[ourPlayerIdx]
+    .map((piece, i) => piece.position === 0 ? i : -1)
+    .filter(i => i >= 0);
+  console.log(`ourStartingPieces`);
+  console.log(ourStartingPieces);
+
+  const ourFinishedPieces = state.game.pieces[ourPlayerIdx]
+    .map((piece, i) => piece.position === 15 ? i : -1)
+    .filter(i => i >= 0);
+  console.log(`ourFinishedPieces`);
+  console.log(ourFinishedPieces);
+
+  const thierPlayerIdx = ourPlayerIdx === 1 ? 0 : 1;
+  console.log(`thierPlayerIdx: ${thierPlayerIdx}`);
+
+  const theirStartingPieces = state.game.pieces[thierPlayerIdx]
+    .map((piece, i) => piece.position === 0 ? i : -1)
+    .filter(i => i >= 0);
+  console.log(`theirStartingPieces`);
+  console.log(theirStartingPieces);
+  
+  const theirFinishedPieces = state.game.pieces[thierPlayerIdx]
+    .map((piece, i) => piece.position === 15 ? i : -1)
+    .filter(i => i >= 0);
+  console.log(`theirFinishedPieces`);
+  console.log(theirFinishedPieces);
 
   return (
     <div>
@@ -139,27 +163,39 @@ export const Ur: React.FC<UrProps> = (props) => {
             </div>
             <div className="pieces">
               <div>
-                {Array(TOTAL_PIECES).fill(0).map((v, i) =>
-                  <Piece
-                    index={i}
-                    key={i}
-                    player={ourPlayerIdx}
-                    mode={ourPlayerIdx === state.game?.turn.player ? state.game.pieces[state.game.turn.player][i].mode ?? 0 : 0}
-                    move={() => requestMove(i)}
-                  />
-                )}
+                {Array(TOTAL_PIECES).fill(0).map((v, i) => {
+                  const startingIndex = ourStartingPieces.indexOf(i);
+                  const endingIndex = ourFinishedPieces.indexOf(i);
+
+                  return (
+                    <Piece
+                      index={i}
+                      key={i}
+                      mode={ourPlayerIdx === state.game?.turn.player ? state.game.pieces[state.game.turn.player][i].mode ?? 0 : 0}
+                      move={() => requestMove(i)}
+                      offset={(startingIndex >= 0 ? startingIndex : (endingIndex >= 0 ? endingIndex : 0)) * boardInactivePiecePadding}
+                      player={ourPlayerIdx}
+                    />
+                  )
+                })}
               </div>
             </div>
             <div className="pieces enemy">
               <div>
-                {Array(TOTAL_PIECES).fill(0).map((v, i) =>
-                  <Piece
-                    index={i}
-                    key={i}
-                    player={thierPlayerIdx}
-                    mode={0}
-                  />
-                )}
+                {Array(TOTAL_PIECES).fill(0).map((v, i) => {
+                  const startingIndex = theirStartingPieces.indexOf(i);
+                  const endingIndex = theirFinishedPieces.indexOf(i);
+
+                  return (
+                    <Piece
+                      index={i}
+                      key={i}
+                      mode={0}
+                      offset={(startingIndex >= 0 ? startingIndex : (endingIndex >= 0 ? endingIndex : 0)) * boardInactivePiecePadding}
+                      player={thierPlayerIdx}
+                    />
+                  )
+                })}
               </div>
             </div>
           </div>
