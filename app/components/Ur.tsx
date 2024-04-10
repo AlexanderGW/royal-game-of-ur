@@ -144,11 +144,6 @@ export const Ur: React.FC<UrProps> = (props) => {
 
   return (
     <div>
-      <ul className="messages">
-        {messages.map((message, index) => (
-          <li key={index}>{JSON.stringify(message)}</li>
-        ))}
-      </ul>
       <div className="container game">
         <div className="ur">
           <div className="view">
@@ -202,7 +197,11 @@ export const Ur: React.FC<UrProps> = (props) => {
         </div>
         <div className="info vertical-middle">
           <div>
-            &nbsp;
+            <ul className="messages">
+              {messages.map((message, index) => (
+                <li key={index}>{JSON.stringify(message)}</li>
+              ))}
+            </ul>
           </div>
         </div>
         <div className="info debug vertical-middle">
