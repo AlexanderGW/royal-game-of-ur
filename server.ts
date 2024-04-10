@@ -11,26 +11,20 @@ import * as http from 'node:http';
 
 const TOTAL_PIECES = 7;
 
-// type Pieces = {
-// 	[k: number]: number[],
-// };
-type Pieces = number[][];
+type PiecePositions = number[][];
 
 type User = {
 	uuid: string,
 	game: string,
 };
 
-// type Players = {
-// 	[k: number]: string,
-// };
 type Players = string[];
 
 type Game = {
 	players: Players,
 	type: string,
 	uuid: string,
-	pieces: Pieces,
+	pieces: PiecePositions,
 	moves: ClientMessage[],
 	turn: {
 		player: number,
@@ -61,7 +55,7 @@ type ServerMessageGame = {
 	type: 'game',
 	players: Players,
 	uuid: string,
-	pieces: Pieces,
+	pieces: PiecePositions,
 	moves: ClientMessage[],
 	turn: {
 		player: number,
@@ -286,7 +280,7 @@ wsServer.on('connection', function(socket, request) {
 
 		// We have matched two players
 		if (i === 2) {
-			let pieces: Pieces = [];
+			let pieces: PiecePositions = [];
 			pieces[0] = Array(TOTAL_PIECES).fill(0);
 			pieces[1] = Array(TOTAL_PIECES).fill(0);
 
@@ -418,10 +412,10 @@ wsServer.on('connection', function(socket, request) {
 						) {
 							throw new Error(`Invalid move`);
 						}
-	
+
 						if (json.piece >= 0)
 							games[gameIndex].pieces[game.turn.player][json.piece] = finalPos;
-	
+
 						// Can same player roll again?
 						if (
 							piecePosHasFreeRoll(finalPos) === true
@@ -431,12 +425,12 @@ wsServer.on('connection', function(socket, request) {
 							nextPlayer = game.turn.player === 0 ? 0 : 1;
 						}
 						// console.log(rolls);
-	
+
 						rolls++;
 					}
 
 					// Switch player
-					if (nextPlayer < 0)
+					if (nextPlayer < 0 || rolls > 3)
 						nextPlayer = game.turn.player === 0 ? 1 : 0;
 
 					// Record the move

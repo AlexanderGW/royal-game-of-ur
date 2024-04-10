@@ -17,6 +17,8 @@ export type Piece = {
 
 export type Pieces = Array<Piece[]>;
 
+export type PiecePositions = number[][];
+
 export type Players = string[];
 
 export type Game = {
@@ -53,7 +55,7 @@ export type ServerMessageGame = {
 	type: 'game',
 	players: Players,
 	uuid: string,
-	pieces: Pieces,
+	pieces: PiecePositions,
 	moves: ClientMessage[],
 	turn: {
 		player: number,

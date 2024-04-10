@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Game, ServerMessageGame, ServerMessageMove, ServerMessageTurn, ServerMessageUser, User } from "./page";
+import { Game, Piece, Pieces, ServerMessageGame, ServerMessageMove, ServerMessageTurn, ServerMessageUser, User } from "./page";
 
 export const TOTAL_PIECES = 7;
 
@@ -208,10 +208,22 @@ function reducer(
 
       return newState;
     case 'GAME':
+      let pieces: Pieces = [];
+      for (let i = 0; i < action.payload.pieces.length; i++) {
+        pieces[i] = [];
+        for (let j = 0; j < action.payload.pieces[i].length; j++) {
+          const piece: Piece = {
+            position: action.payload.pieces[i][j],
+            mode: 0
+          }
+          pieces[i].push(piece);
+        }
+      }
+
       newState.game = {
         players: action.payload.players,
         uuid: action.payload.uuid,
-        pieces: action.payload.pieces,
+        pieces: pieces,
         moves: [],
         turn: {
           player: 0,
