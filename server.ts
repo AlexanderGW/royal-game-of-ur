@@ -10,6 +10,7 @@ import { WebSocketServer } from 'ws';
 import * as http from 'node:http';
 
 const TOTAL_PIECES = 7;
+const GAME_TIMEOUT = 30000;
 
 type PiecePositions = number[][];
 
@@ -22,7 +23,7 @@ type Players = string[];
 
 type Game = {
 	players: Players,
-	type: string,
+	state: number,
 	uuid: string,
 	pieces: PiecePositions,
 	moves: ClientMessage[],
@@ -48,12 +49,12 @@ type ServerMessageMove = {
 	player: number,
 	piece: number,
 	roll: number,
-	// me: boolean,
 };
 
 type ServerMessageGame = {
 	type: 'game',
 	players: Players,
+	state: number,
 	uuid: string,
 	pieces: PiecePositions,
 	moves: ClientMessage[],
@@ -81,20 +82,15 @@ process.title = 'game-of-ur';
 
 const webSocketsServerPort = process.argv[2] || 1337;
 
-const clients: any[] = []; // WebSocket
+let clients: any[] = []; // WebSocket
 
-const users: User[] = [];
+let users: User[] = [];
 
-const usersIndex: string[] = [];
+let usersIndex: string[] = [];
 
-const games: Game[] = [];
+let games: Game[] = [];
 
-const gamesIndex: string[] = [];
-
-// Positions that allow the player another turn
-function piecePosHasFreeRoll(pos: number): boolean {
-	return (pos === 4 || pos === 8 || pos === 14);
-}
+let gamesIndex: string[] = [];
 
 // Generate a random number, upto one before max
 function getRandomInt(max: number): number {
@@ -187,6 +183,23 @@ function sendToGameClients(
 			console.log((new Date()) + ' --> '
 				+ users[i].uuid + ': ' + jsonString);
 		}
+	}
+}
+
+function pollGameState(
+	gameIndex: number,
+	lastMoves: number,
+): void {
+	const currentMoves = games[gameIndex].moves.length;
+	if (lastMoves === currentMoves) {
+		console.log(`Game timeout: ${games[gameIndex].uuid}`);
+		games[gameIndex].state = 0;
+	}
+	else {
+		console.log(`Game active: ${games[gameIndex].uuid} (${currentMoves}/${lastMoves})`);
+		setTimeout(() => {
+			pollGameState(gameIndex, currentMoves);
+		}, GAME_TIMEOUT);
 	}
 }
 
@@ -287,6 +300,7 @@ wsServer.on('connection', function(socket, request) {
 			const gameResponse: ServerMessageGame = {
 				type: 'game',
 				uuid: gameId,
+				state: 1,
 				players: players,
 				pieces: pieces,
 				moves: [],
@@ -310,19 +324,15 @@ wsServer.on('connection', function(socket, request) {
 				rolls: games[gameIndex].turn.rolls
 			};
 			sendToGameClients(gameIndex, turnResponse);
+
+			// If game is inactive after `GAME_TIMEOUT`, `state` to `0`
+			setTimeout(() => {
+				pollGameState(gameIndex, 0);
+			}, GAME_TIMEOUT);
 		}
 
 		// Something went wrong, clear the match lock
 		else {
-			// for (let i = 0; i < players.length; i++) {
-			// 	const playerIndex = players[i];
-			// 	for (let j = 0; j < users.length; j++) {
-			// 		if (users[j].game === gameId) {
-			// 			users[j].game = '';
-			// 		}
-			// 	}
-			// }
-
 			for (let j = 0; j < users.length; j++) {
 				if (users[j].game === gameId) {
 					users[j].game = '';
@@ -366,6 +376,11 @@ wsServer.on('connection', function(socket, request) {
 					}
 
 					const game = games[gameIndex];
+
+					// Game active?
+					if (!game.state) {
+						throw new Error(`Game ended`);
+					}
 
 					// Requesting user is in the game?
 					if (game.players.indexOf(userId) < 0) {
@@ -418,7 +433,9 @@ wsServer.on('connection', function(socket, request) {
 
 						// Can same player roll again?
 						if (
-							piecePosHasFreeRoll(finalPos) === true
+
+							// Positions that allow the player another turn
+							(finalPos === 4 || finalPos === 8 || finalPos === 14)
 							&& game.turn.rolls < 4
 						) {
 							rolls = game.turn.rolls;
