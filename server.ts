@@ -10,6 +10,7 @@ import { WebSocketServer } from 'ws';
 import * as http from 'node:http';
 
 const TOTAL_PIECES = 7;
+const TOTAL_SPACES = 15;
 const GAME_TIMEOUT = 30000;
 
 type PiecePositions = number[][];
@@ -111,7 +112,7 @@ function validateGamePiecePosWithRoll(
 		let nextPos = currPos + roll;
 
 		// Piece can not be moved this many spaces
-		if (nextPos > 15)
+		if (nextPos > TOTAL_SPACES)
 			return 0;
 
 		// console.log(games);
@@ -123,7 +124,7 @@ function validateGamePiecePosWithRoll(
 
 		if (ourPieces.length) {
 			for (let i = 0; i < ourPieces.length; i++) {
-				if (ourPieces[i] === nextPos && nextPos < 15) {
+				if (ourPieces[i] === nextPos && nextPos < TOTAL_SPACES) {
 					console.log('cannot move piece ' + piece + ' at '+currPos+' to ' + nextPos);
 					return 0;
 				}
@@ -177,6 +178,7 @@ function sendToGameClients(
 
 	const jsonString = JSON.stringify(json);
 
+	// Send game data to applicable users
 	for (let i = 0; i < users.length; i++) {
 		if (users[i].game === gameUuid) {
 			clients[i]?.send(jsonString);
@@ -190,11 +192,21 @@ function pollGameState(
 	gameIndex: number,
 	lastMoves: number,
 ): void {
+
+	// Game state is zero (likely a winner)
+	if (!games[gameIndex].state) {
+		console.log(`Game ended: ${games[gameIndex].uuid}`);
+		return;
+	}
+
+	// No new moves
 	const currentMoves = games[gameIndex].moves.length;
 	if (lastMoves === currentMoves) {
 		console.log(`Game timeout: ${games[gameIndex].uuid}`);
 		games[gameIndex].state = 0;
 	}
+	
+	// Still moving, check later
 	else {
 		console.log(`Game active: ${games[gameIndex].uuid} (${currentMoves}/${lastMoves})`);
 		setTimeout(() => {
@@ -462,6 +474,35 @@ wsServer.on('connection', function(socket, request) {
 						roll: finalPos
 					};
 					sendToGameClients(gameIndex, responseMove);
+
+					// End game if a player has finished all pieces
+					if (finalPos === TOTAL_SPACES) {
+						let scores: number[] = [];
+						scores.push(games[gameIndex].pieces[0].reduce((score, position) => score + position, 0));
+						scores.push(games[gameIndex].pieces[1].reduce((score, position) => score + position, 0));
+						console.log(`scores`);
+						console.log(scores);
+
+						// Winner
+						const result = scores.indexOf(TOTAL_PIECES * TOTAL_SPACES);
+
+						// TESTING: End game on first finished piece
+						// const result = scores.reduce((score, position) => score + position, 0);
+
+						if (result >= 0) {
+							console.log(`Game ${game.uuid} ended; player ${result} won`);
+							games[gameIndex].state = 0;
+
+							const gameResponse: ServerMessageGame = {
+								type: 'game',
+								...games[gameIndex]
+							}
+
+							sendToGameClients(gameIndex, gameResponse);
+
+							break;
+						}
+					}
 
 					// Send next turn to the players
 					games[gameIndex].turn = {
