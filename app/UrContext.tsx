@@ -235,6 +235,8 @@ function reducer(
       };
       console.log(newState);
 
+      window.location.hash = `#!/game/${action.payload.uuid}`;
+
       return newState;
     case 'USER':
       newState.user = {

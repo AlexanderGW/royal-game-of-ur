@@ -113,34 +113,34 @@ export const Ur: React.FC<UrProps> = (props) => {
   }
 
   const ourPlayerIdx = Number(state.game?.players.indexOf(state.user?.uuid ?? state.game.players[0]));
-  console.log(`ourPlayerIdx: ${ourPlayerIdx}`);
+  // console.log(`ourPlayerIdx: ${ourPlayerIdx}`);
 
   const ourStartingPieces = state.game.pieces[ourPlayerIdx]
     .map((piece, i) => piece.position === 0 ? i : -1)
     .filter(i => i >= 0);
-  console.log(`ourStartingPieces`);
-  console.log(ourStartingPieces);
+  // console.log(`ourStartingPieces`);
+  // console.log(ourStartingPieces);
 
   const ourFinishedPieces = state.game.pieces[ourPlayerIdx]
     .map((piece, i) => piece.position === 15 ? i : -1)
     .filter(i => i >= 0);
-  console.log(`ourFinishedPieces`);
-  console.log(ourFinishedPieces);
+  // console.log(`ourFinishedPieces`);
+  // console.log(ourFinishedPieces);
 
   const thierPlayerIdx = ourPlayerIdx === 1 ? 0 : 1;
-  console.log(`thierPlayerIdx: ${thierPlayerIdx}`);
+  // console.log(`thierPlayerIdx: ${thierPlayerIdx}`);
 
   const theirStartingPieces = state.game.pieces[thierPlayerIdx]
     .map((piece, i) => piece.position === 0 ? i : -1)
     .filter(i => i >= 0);
-  console.log(`theirStartingPieces`);
-  console.log(theirStartingPieces);
+  // console.log(`theirStartingPieces`);
+  // console.log(theirStartingPieces);
   
   const theirFinishedPieces = state.game.pieces[thierPlayerIdx]
     .map((piece, i) => piece.position === 15 ? i : -1)
     .filter(i => i >= 0);
-  console.log(`theirFinishedPieces`);
-  console.log(theirFinishedPieces);
+  // console.log(`theirFinishedPieces`);
+  // console.log(theirFinishedPieces);
 
   const weWon = ourFinishedPieces.length === TOTAL_PIECES;
   const theyWon = theirFinishedPieces.length === TOTAL_PIECES;
