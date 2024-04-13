@@ -204,6 +204,13 @@ function pollGameState(
 	if (lastMoves === currentMoves) {
 		console.log(`Game timeout: ${games[gameIndex].uuid}`);
 		games[gameIndex].state = 0;
+
+		const gameResponse: ServerMessageGame = {
+			type: 'game',
+			...games[gameIndex]
+		}
+
+		sendToGameClients(gameIndex, gameResponse);
 	}
 	
 	// Still moving, check later
