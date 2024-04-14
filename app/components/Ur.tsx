@@ -153,7 +153,7 @@ export const Ur: React.FC<UrProps> = (props) => {
   if (ourPlayerIdx < 0)
     ourPlayerIdx = 0;
 
-  console.log(`ourPlayerIdx: ${ourPlayerIdx}`);
+  // console.log(`ourPlayerIdx: ${ourPlayerIdx}`);
 
   const ourStartingPieces = state.game?.pieces[ourPlayerIdx]
     .map((piece, i) => piece.position === 0 ? i : -1)

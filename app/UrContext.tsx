@@ -116,7 +116,7 @@ function reducer(
             if (!ourPieces)
               throw new Error(`Invalid game piece data`);
 
-            if (typeof newState.game?.turn.roll === 'undefined')
+            if (newState.game?.turn.roll === undefined)
               throw new Error(`Invalid game turn data`);
 
             const opposingPlayerIndex = (playerIndex === 0 ? 1 : 0);
@@ -170,14 +170,14 @@ function reducer(
   
             // Can't move
             if (pieceMovable.length === 0) {
-              console.log(`Can't move any pieces`);
+              console.warn(`Can't move any pieces`);
               skipMove = true;
             } else {
-              console.log(`pieceMovable`);
-              console.log(pieceMovable);
+              // console.log(`pieceMovable`);
+              // console.log(pieceMovable);
               for (let i = 0; i < pieceMovable.length; i++) {
                 const piece = pieceMovable[i];
-                console.log(`Piece: ${piece}`);
+                // console.log(`Piece: ${piece}`);
                 newState.game.pieces[playerIndex][piece] = {
                   position: newState.game.pieces[playerIndex][piece].position ?? 0,
                   mode: 2,
@@ -208,6 +208,7 @@ function reducer(
       console.log(newState);
 
       return newState;
+
     case 'GAME':
       let pieces: Pieces = [];
       for (let i = 0; i < action.payload.pieces.length; i++) {
@@ -238,6 +239,7 @@ function reducer(
       window.location.hash = `#!/game/${action.payload.uuid}`;
 
       return newState;
+
     case 'USER':
       newState.user = {
         status: 1,
@@ -246,6 +248,7 @@ function reducer(
       console.log(newState);
 
       return newState;
+
     default:
       return state;
   }

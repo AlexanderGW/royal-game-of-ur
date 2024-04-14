@@ -549,10 +549,10 @@ wsServer.on('connection', function(socket, request) {
 						...games[gameIndex]
 					}
 
-					sendToClient(clientIndex, gameResponse);
-
 					// Set game on user
 					users[clientIndex].game = games[gameIndex].uuid
+
+					sendToClient(clientIndex, gameResponse);
 
 					break;
 			}
