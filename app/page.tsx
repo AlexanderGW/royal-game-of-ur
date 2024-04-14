@@ -52,6 +52,11 @@ export type ServerMessageMove = {
 	// me: boolean,
 };
 
+export type ServerMessageView = {
+	type: 'view',
+	uuid: string,
+};
+
 export type ServerMessageGame = {
 	type: 'game',
 	players: Players,

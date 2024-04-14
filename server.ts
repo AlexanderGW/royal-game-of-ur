@@ -27,7 +27,7 @@ type Game = {
 	state: number,
 	uuid: string,
 	pieces: PiecePositions,
-	moves: ClientMessage[],
+	moves: ClientMessageMove[],
 	turn: {
 		player: number,
 		roll: number,
@@ -35,14 +35,20 @@ type Game = {
 	}
 };
 
-type ClientMessage = {
-	type: "game" | "move" | "turn" | "user", // move, turn, user, game
+type ClientMessageMove = {
+	type: "move",
 	uuid: string,
 	player: number,
 	piece: number,
 	roll: number,
-	me: boolean,
 };
+
+type ClientMessageView = {
+	type: "view",
+	uuid: string,
+};
+
+export type ClientMessage = ClientMessageMove | ClientMessageView;
 
 type ServerMessageMove = {
 	type: 'move',
@@ -58,7 +64,7 @@ type ServerMessageGame = {
 	state: number,
 	uuid: string,
 	pieces: PiecePositions,
-	moves: ClientMessage[],
+	moves: ClientMessageMove[],
 	turn: {
 		player: number,
 		roll: number,
@@ -77,6 +83,8 @@ type ServerMessageUser = {
 	type: 'user',
 	uuid: string,
 };
+
+type ServerMessage = ServerMessageMove | ServerMessageGame | ServerMessageTurn | ServerMessageUser;
 
 // Optional. You will see this name in eg. 'ps' or 'top' command
 process.title = 'game-of-ur';
@@ -163,12 +171,21 @@ function validateGamePiecePosWithRoll(
 	return 0;
 }
 
+function sendToClient(
+	clientIndex: number,
+	data: ServerMessage,
+) {
+	const json = JSON.stringify(data);
+	clients[clientIndex]?.send(json);
+	console.log(`${(new Date())} --> ${users[clientIndex].uuid}: ${json}`);
+}
+
 /**
  * Send to clients viewing game
  */
 function sendToGameClients(
 	gameIndex: number,
-	json: ServerMessageMove | ServerMessageTurn | ServerMessageGame | ServerMessageTurn,
+	data: ServerMessageMove | ServerMessageTurn | ServerMessageGame | ServerMessageTurn,
 ): void {
 	if (gameIndex < 0) {
 		throw new Error(`Invalid game ID`);
@@ -176,14 +193,10 @@ function sendToGameClients(
 
 	const gameUuid = gamesIndex[gameIndex];
 
-	const jsonString = JSON.stringify(json);
-
 	// Send game data to applicable users
 	for (let i = 0; i < users.length; i++) {
 		if (users[i].game === gameUuid) {
-			clients[i]?.send(jsonString);
-			console.log((new Date()) + ' --> '
-				+ users[i].uuid + ': ' + jsonString);
+			sendToClient(i, data);
 		}
 	}
 }
@@ -289,9 +302,8 @@ wsServer.on('connection', function(socket, request) {
 		type: 'user',
 		uuid: userId
 	};
-	socket.send(
-		JSON.stringify(userResponse)
-	);
+
+	sendToClient(clientIndex, userResponse);
 
 	// TODO: REFACTOR; MATCH TWO PLAYERS FOR A GAME TEST
 	if ((clients.length % 2) === 0) {
@@ -373,28 +385,27 @@ wsServer.on('connection', function(socket, request) {
 	socket.on('message', function(data) {
 		const rawMessage = data.toString();
 
-		// if (data.type === 'utf8') {}
 		console.log((new Date()) + ' <-- ' + userId + ': ' + rawMessage);
 
 		try {
 			const json: ClientMessage = JSON.parse(rawMessage);
-
-			if (!json.hasOwnProperty('type')) {
+			if (!json?.type) {
 				throw new Error(`Invalid message`);
 			}
 
-			switch (json.type) {
-				case 'move':
-					const gameIndex = gamesIndex.indexOf(json.uuid);
-					if (gameIndex < 0) {
-						throw new Error(`Unknown game: ${json.uuid}`);
-					}
-					
-					if (!games[gameIndex]) {
-						throw new Error(`Unknown game: ${json.uuid}`);
-					}
+			const gameIndex = gamesIndex.indexOf(json.uuid);
+			if (gameIndex < 0 || !games[gameIndex]) {
+				throw new Error(`Unknown game: ${json.uuid}`);
+			}
 
-					const game = games[gameIndex];
+			const game = games[gameIndex];
+
+			switch (json.type) {
+
+				/**
+				 * Game move requested
+				 */
+				case 'move':
 
 					// Game active?
 					if (!game.state) {
@@ -526,6 +537,22 @@ wsServer.on('connection', function(socket, request) {
 						roll: game.turn.roll
 					};
 					sendToGameClients(gameIndex, responseTurn);
+
+					break;
+
+				/**
+				 * Game viewing requested, respond with game data
+				 */
+				case 'view':
+					const gameResponse: ServerMessageGame = {
+						type: 'game',
+						...games[gameIndex]
+					}
+
+					sendToClient(clientIndex, gameResponse);
+
+					// Set game on user
+					users[clientIndex].game = games[gameIndex].uuid
 
 					break;
 			}

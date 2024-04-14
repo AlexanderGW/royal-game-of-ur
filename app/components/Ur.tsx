@@ -1,6 +1,6 @@
 import React from 'react';
 import { TOTAL_PIECES, useGame } from '../UrContext';
-import { ServerMessageGame, ServerMessageMove, ServerMessageTurn, ServerMessageUser } from '../page';
+import { ServerMessageGame, ServerMessageMove, ServerMessageTurn, ServerMessageUser, ServerMessageView } from '../page';
 import { stylex } from '@stylexjs/stylex';
 import { Piece } from './Piece';
 
@@ -20,17 +20,38 @@ export const Ur: React.FC<UrProps> = (props) => {
 
   const [messages, setMessages] = React.useState<(ServerMessageMove | ServerMessageGame | ServerMessageTurn | ServerMessageUser)[]>([]);
 
-  const requestMove = (i: number) => {
-    console.log(`Request move: ${i}`);
+  const requestMove = (
+    piece: number
+  ): void => {
+    console.log(`Request move: ${piece}`);
     const request: ServerMessageMove = {
       type: 'move',
       uuid: state.game?.uuid ?? '',
       player: Number(state.game?.players.indexOf(state.user?.uuid ?? '')),
-      piece: i,
+      piece: piece,
       roll: state.game?.turn.roll ?? 0,
     };
     // console.log(request);
     state.socket?.send(JSON.stringify(request));
+  };
+
+  const viewGame = (
+    socket: WebSocket,
+    uuid: string,
+  ): void => {
+    if (!uuid) return;
+    console.log(`Game requested`);
+    const request: ServerMessageView = {
+      type: 'view',
+      uuid: uuid,
+    };
+    console.log(request);
+    console.log(socket);
+    socket?.send(JSON.stringify(request));
+  };
+
+  const exitGame = (): void => {
+    window.location.hash = '/';
   };
 
   React.useEffect(() => {
@@ -41,7 +62,21 @@ export const Ur: React.FC<UrProps> = (props) => {
       payload: socket,
     });
 
-    // socket.onopen = function () {};
+    socket.onopen = function () {
+      console.log(window.location.hash);
+      const pathRegex = /#!\/(game|user)\/([a-z0-9\-]+)/;
+      const result = window.location.hash.match(pathRegex);
+      if (result) {
+        console.log(`Request type: ${result[1]}`);
+        console.log(`Request value: ${result[2]}`);
+
+        switch (result[1]) {
+          case 'game' :
+            viewGame(socket, result[2]);
+            break;
+        }
+      }
+    };
 
     socket.onmessage = (event) => {
       const message:
@@ -106,22 +141,27 @@ export const Ur: React.FC<UrProps> = (props) => {
     };
   }, []);
 
-  if (!state.game) {
+  if (!state.game || !state.user) {
     return (
       <><p>Waiting for another player...</p></>
     )
   }
 
-  const ourPlayerIdx = Number(state.game?.players.indexOf(state.user?.uuid ?? state.game.players[0]));
-  // console.log(`ourPlayerIdx: ${ourPlayerIdx}`);
+  let ourPlayerIdx = Number(state.game?.players.indexOf(state.user?.uuid));
 
-  const ourStartingPieces = state.game.pieces[ourPlayerIdx]
+  // Spectator, view as player zero
+  if (ourPlayerIdx < 0)
+    ourPlayerIdx = 0;
+
+  console.log(`ourPlayerIdx: ${ourPlayerIdx}`);
+
+  const ourStartingPieces = state.game?.pieces[ourPlayerIdx]
     .map((piece, i) => piece.position === 0 ? i : -1)
     .filter(i => i >= 0);
   // console.log(`ourStartingPieces`);
   // console.log(ourStartingPieces);
 
-  const ourFinishedPieces = state.game.pieces[ourPlayerIdx]
+  const ourFinishedPieces = state.game?.pieces[ourPlayerIdx]
     .map((piece, i) => piece.position === 15 ? i : -1)
     .filter(i => i >= 0);
   // console.log(`ourFinishedPieces`);
@@ -130,7 +170,7 @@ export const Ur: React.FC<UrProps> = (props) => {
   const thierPlayerIdx = ourPlayerIdx === 1 ? 0 : 1;
   // console.log(`thierPlayerIdx: ${thierPlayerIdx}`);
 
-  const theirStartingPieces = state.game.pieces[thierPlayerIdx]
+  const theirStartingPieces = state.game?.pieces[thierPlayerIdx]
     .map((piece, i) => piece.position === 0 ? i : -1)
     .filter(i => i >= 0);
   // console.log(`theirStartingPieces`);
@@ -209,7 +249,7 @@ export const Ur: React.FC<UrProps> = (props) => {
         </div>
         <div className="info debug vertical-middle">
           <div>
-            <button className="exit" title="Exit game">✕</button>
+            <button className="exit" title="Exit game" onClick={() => exitGame()}>✕</button>
           </div>
           <div>
             <button className="rotate" title="Rotate the board 90 degrees">↻</button>
@@ -225,9 +265,9 @@ export const Ur: React.FC<UrProps> = (props) => {
           style={{display: !state.game.state || weWon || theyWon ? 'block' : 'none'}}
         >
           <div className="vertical-middle">
-            <button className="exit" title="Exit game">←</button>
+            <button className="exit" title="Exit game" onClick={() => exitGame()}>←</button>
             <div>
-              <span id="banner">{weWon ? `You won!` : (theyWon ? `They won!` : 'Game ended' )}</span>
+              <span id="banner">{weWon ? `You won!` : (theyWon ? `They won!` : 'Game timed out' )}</span>
             </div>
           </div>
         </div>
