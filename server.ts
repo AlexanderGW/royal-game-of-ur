@@ -239,15 +239,14 @@ function pollGameState(
  * HTTP server
  */
 const server = http.createServer(function(request, response) {
-	// Not important for us. We're writing WebSocket server,
-	// not HTTP server
 	console.log((new Date()) + ' HTTP server. URL'
 		+ request.url + ' requested.');
 
 	if (request.url === '/status') {
 		response.writeHead(200, {'Content-Type': 'application/json'});
 		const responseObject = {
-			currentClients: clients.length
+			currentClients: clients.length,
+			totalGames: games.length
 		};
 		response.end(JSON.stringify(responseObject));
 	} else {
