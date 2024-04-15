@@ -11,7 +11,7 @@ import * as http from 'node:http';
 
 const TOTAL_PIECES = 7;
 const TOTAL_SPACES = 15;
-const GAME_TIMEOUT = 30000;
+const GAME_TIMEOUT = 300000;
 
 type PiecePositions = number[][];
 
