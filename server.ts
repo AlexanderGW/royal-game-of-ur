@@ -16,18 +16,20 @@ const GAME_TIMEOUT = 300000;
 type PiecePositions = number[][];
 
 type User = {
+	client: number,
 	uuid: string,
 	game: string,
+	status: number,
 };
 
 type Players = string[];
 
 type Game = {
 	players: Players,
-	state: number,
+	status: number,
 	uuid: string,
 	pieces: PiecePositions,
-	moves: ClientMessageMove[],
+	moves: Move[],
 	turn: {
 		player: number,
 		roll: number,
@@ -35,22 +37,14 @@ type Game = {
 	}
 };
 
-type ClientMessageMove = {
-	type: "move",
-	uuid: string,
-	player: number,
-	piece: number,
-	roll: number,
-};
+type GameSummary = Omit<Game, "moves" | "turn">;
 
-type ClientMessageView = {
-	type: "view",
-	uuid: string,
-};
 
-export type ClientMessage = ClientMessageMove | ClientMessageView;
 
-type ServerMessageMove = {
+
+
+
+type MessageMove = {
 	type: 'move',
 	uuid: string,
 	player: number,
@@ -58,13 +52,15 @@ type ServerMessageMove = {
 	roll: number,
 };
 
-type ServerMessageGame = {
+type Move = Omit<MessageMove, "type" | "uuid">;
+
+type MessageGame = {
 	type: 'game',
 	players: Players,
-	state: number,
+	status: number,
 	uuid: string,
 	pieces: PiecePositions,
-	moves: ClientMessageMove[],
+	moves: Move[],
 	turn: {
 		player: number,
 		roll: number,
@@ -72,19 +68,47 @@ type ServerMessageGame = {
 	}
 };
 
-type ServerMessageTurn = {
+type MessageSearch = {
+	type: 'search',
+	group: number,
+};
+
+type MessageSummary = {
+	type: 'summary',
+	games: GameSummary[],
+	// users: string[],
+	users: User[],
+};
+
+type MessageTurn = {
 	type: 'turn',
 	player: number,
 	roll: number,
 	rolls: number,
 };
 
-type ServerMessageUser = {
+type MessageUser = {
 	type: 'user',
+	status: number,
 	uuid: string,
 };
 
-type ServerMessage = ServerMessageMove | ServerMessageGame | ServerMessageTurn | ServerMessageUser;
+type MessageView = {
+	type: "view",
+	uuid: string,
+};
+
+type ClientMessage = MessageMove | MessageSearch | MessageSummary | MessageView;
+
+type ServerMessage = MessageMove | MessageGame | MessageSearch | MessageSummary | MessageTurn | MessageUser;
+
+// type Messages = MessageMove | MessageGame | MessageSearch | MessageTurn | MessageUser;
+
+// type MessageTypes = "move" | "game" | "search" | "turn" | "user";
+
+// type Message = {
+// 	payload: Messages,
+// };
 
 // Optional. You will see this name in eg. 'ps' or 'top' command
 process.title = 'game-of-ur';
@@ -173,9 +197,9 @@ function validateGamePiecePosWithRoll(
 
 function sendToClient(
 	clientIndex: number,
-	data: ServerMessage,
+	message: ServerMessage,
 ) {
-	const json = JSON.stringify(data);
+	const json = JSON.stringify(message);
 	clients[clientIndex]?.send(json);
 	console.log(`${(new Date())} --> ${users[clientIndex].uuid}: ${json}`);
 }
@@ -185,7 +209,7 @@ function sendToClient(
  */
 function sendToGameClients(
 	gameIndex: number,
-	data: ServerMessageMove | ServerMessageTurn | ServerMessageGame | ServerMessageTurn,
+	data: ServerMessage,
 ): void {
 	if (gameIndex < 0) {
 		throw new Error(`Invalid game ID`);
@@ -207,7 +231,7 @@ function pollGameState(
 ): void {
 
 	// Game state is zero (likely a winner)
-	if (!games[gameIndex].state) {
+	if (!games[gameIndex].status) {
 		console.log(`Game ended: ${games[gameIndex].uuid}`);
 		return;
 	}
@@ -216,9 +240,9 @@ function pollGameState(
 	const currentMoves = games[gameIndex].moves.length;
 	if (lastMoves === currentMoves) {
 		console.log(`Game timeout: ${games[gameIndex].uuid}`);
-		games[gameIndex].state = 0;
+		games[gameIndex].status = 0;
 
-		const gameResponse: ServerMessageGame = {
+		const gameResponse: MessageGame = {
 			type: 'game',
 			...games[gameIndex]
 		}
@@ -288,8 +312,10 @@ wsServer.on('connection', function(socket, request) {
 	clients.push(socket);
 
 	users.push({
+		client: clientIndex,
 		uuid: userId,
-		game: ''
+		game: '',
+		status: 0,
 	});
 
 	usersIndex.push(userId);
@@ -297,22 +323,25 @@ wsServer.on('connection', function(socket, request) {
 	console.log(`${(new Date())}; User established: ${userId}`);
 
 	// Send user their uuid
-	const userResponse: ServerMessageUser = {
+	const userResponse: MessageUser = {
 		type: 'user',
+		status: 0,
 		uuid: userId
 	};
 
 	sendToClient(clientIndex, userResponse);
 
-	// TODO: REFACTOR; MATCH TWO PLAYERS FOR A GAME TEST
-	if ((clients.length % 2) === 0) {
+	// Match available players
+	const availableUsers = users.filter(user => user.status === 1 && user.game.length === 0);
+	if ((availableUsers.length % 2) === 0) {
 		let gameId = uuid.v4();
 		let players: Players = [];
 
 		// Add two users that are not in a game
 		let i = 0;
 		for (let j = 0; j < users.length; j++) {
-			if (users[j].game.length === 0) {
+			if (users[j].status === 1 && users[j].game.length === 0) {
+				users[j].status = 2;
 				users[j].game = gameId;
 				players[i] = users[j].uuid;
 				i++;
@@ -327,10 +356,10 @@ wsServer.on('connection', function(socket, request) {
 			pieces[0] = Array(TOTAL_PIECES).fill(0);
 			pieces[1] = Array(TOTAL_PIECES).fill(0);
 
-			const gameResponse: ServerMessageGame = {
+			const gameResponse: MessageGame = {
 				type: 'game',
 				uuid: gameId,
-				state: 1,
+				status: 1,
 				players: players,
 				pieces: pieces,
 				moves: [],
@@ -346,8 +375,17 @@ wsServer.on('connection', function(socket, request) {
 			gamesIndex.push(gameId);
 			sendToGameClients(gameIndex, gameResponse);
 
+			users.filter(user => user.game === gameId).map(user => {
+				const userResponse: MessageUser = {
+					type: 'user',
+					status: user.status,
+					uuid: user.uuid,
+				};
+				sendToClient(user.client, userResponse);
+			});
+
 			// send turn
-			const turnResponse: ServerMessageTurn = {
+			const turnResponse: MessageTurn = {
 				type: 'turn',
 				player: games[gameIndex].turn.player,
 				roll: games[gameIndex].turn.roll,
@@ -365,6 +403,7 @@ wsServer.on('connection', function(socket, request) {
 		else {
 			for (let j = 0; j < users.length; j++) {
 				if (users[j].game === gameId) {
+					users[j].status = 1;
 					users[j].game = '';
 				}
 			}
@@ -392,22 +431,71 @@ wsServer.on('connection', function(socket, request) {
 				throw new Error(`Invalid message`);
 			}
 
-			const gameIndex = gamesIndex.indexOf(json.uuid);
-			if (gameIndex < 0 || !games[gameIndex]) {
-				throw new Error(`Unknown game: ${json.uuid}`);
-			}
-
-			const game = games[gameIndex];
+			let gameIndex: number = -1;
+			let game: Game | undefined;
 
 			switch (json.type) {
+
+				/**
+				 * Game viewing requested, respond with game data
+				 */
+				case 'summary':
+					const responseSummary: MessageSummary = {
+						type: 'summary',
+						games: games.filter(game => game.status === 1).map(game => {
+							const result: GameSummary = {
+								uuid: game?.uuid ?? '',
+								pieces: game?.pieces ?? [],
+								players: game?.players ?? [],
+								status: game?.status ?? 0,
+							};
+							return result;
+						}),
+						// users: users.map(user => user.uuid),
+						users: users,
+					}
+
+					sendToClient(clientIndex, responseSummary);
+
+					break;
+
+				/**
+				 * Game viewing requested, respond with game data
+				 */
+				case 'search':
+					users[clientIndex].status = 1;
+
+					// const response: MessageSearch = {
+					// 	type: 'search',
+					// 	group: 0
+					// }
+
+					// sendToClient(clientIndex, response);
+
+
+					const userResponse: MessageUser = {
+						type: 'user',
+						status: users[clientIndex].status,
+						uuid: users[clientIndex].uuid,
+					};
+				
+					sendToClient(clientIndex, userResponse);
+
+					break;
 
 				/**
 				 * Game move requested
 				 */
 				case 'move':
+					gameIndex = gamesIndex.indexOf(json.uuid);
+					if (gameIndex < 0 || !games[gameIndex]) {
+						throw new Error(`Unknown game: ${json.uuid}`);
+					}
+
+					game = games[gameIndex];
 
 					// Game active?
-					if (!game.state) {
+					if (!game.status) {
 						throw new Error(`Game ended`);
 					}
 
@@ -483,7 +571,7 @@ wsServer.on('connection', function(socket, request) {
 					games[gameIndex].moves.push(json);
 
 					// Send the move to the players
-					const responseMove: ServerMessageMove = {
+					const responseMove: MessageMove = {
 						type: 'move',
 						uuid: json.uuid,
 						player: json.player,
@@ -508,9 +596,9 @@ wsServer.on('connection', function(socket, request) {
 
 						if (result >= 0) {
 							console.log(`Game ${game.uuid} ended; player ${result} won`);
-							games[gameIndex].state = 0;
+							games[gameIndex].status = 0;
 
-							const gameResponse: ServerMessageGame = {
+							const gameResponse: MessageGame = {
 								type: 'game',
 								...games[gameIndex]
 							}
@@ -529,7 +617,7 @@ wsServer.on('connection', function(socket, request) {
 					};
 
 					// Send turn
-					const responseTurn: ServerMessageTurn = {
+					const responseTurn: MessageTurn = {
 						type: 'turn',
 						player: game.turn.player,
 						rolls: game.turn.rolls,
@@ -543,7 +631,12 @@ wsServer.on('connection', function(socket, request) {
 				 * Game viewing requested, respond with game data
 				 */
 				case 'view':
-					const gameResponse: ServerMessageGame = {
+					gameIndex = gamesIndex.indexOf(json.uuid);
+					if (gameIndex < 0 || !games[gameIndex]) {
+						throw new Error(`Unknown game: ${json.uuid}`);
+					}
+
+					const gameResponse: MessageGame = {
 						type: 'game',
 						...games[gameIndex]
 					}

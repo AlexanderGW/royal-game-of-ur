@@ -1,8 +1,102 @@
 import React from 'react';
 import { TOTAL_PIECES, useGame } from '../UrContext';
-import { ServerMessageGame, ServerMessageMove, ServerMessageTurn, ServerMessageUser, ServerMessageView } from '../page';
 import { stylex } from '@stylexjs/stylex';
 import { Piece } from './Piece';
+
+export type User = {
+	uuid: string,
+	status: number,
+};
+
+export type Piece = {
+  position: number,
+  mode: number,
+};
+
+export type Pieces = Array<Piece[]>;
+
+export type PiecePositions = number[][];
+
+export type Players = string[];
+
+export type Move = Omit<MessageMove, "type" | "uuid">;
+
+export type Game = {
+	players: Players,
+	uuid: string,
+	status: number,
+	pieces: Pieces,
+	moves: Move[],
+	turn: {
+		player: number,
+		roll: number,
+		rolls: number,
+	}
+};
+
+export type GameSummary = Omit<Game, "moves" | "turn">;
+
+export type MessageMove = {
+	type: 'move',
+	uuid: string,
+	player: number,
+	piece: number,
+	roll: number,
+};
+
+export type MessageView = {
+	type: 'view',
+	uuid: string,
+};
+
+export type MessageSearch = {
+	type: 'search',
+	group: 0,
+};
+
+export type MessageSummary = {
+	type: 'summary',
+	games?: GameSummary[],
+	// users: string[],
+	users?: User[],
+};
+
+export type MessageGame = {
+	type: 'game',
+	players: Players,
+	status: number,
+	uuid: string,
+	pieces: PiecePositions,
+	moves: Move[],
+	turn: {
+		player: number,
+		roll: number,
+		rolls: number,
+	}
+};
+
+export type MessageTurn = {
+	type: 'turn',
+	player: number,
+	roll: number,
+	rolls: number,
+};
+
+export type MessageUser = {
+	type: 'user',
+	status: number,
+	uuid: string,
+};
+
+export type Message =
+	MessageMove
+	| MessageGame
+	| MessageSummary
+  | MessageSearch
+	| MessageTurn
+	| MessageUser;
+
+export type Messages = (Message)[];
 
 export type UrProps = {
   // key: number,
@@ -18,13 +112,13 @@ export const Ur: React.FC<UrProps> = (props) => {
 
   const { state, dispatch } = useGame();
 
-  const [messages, setMessages] = React.useState<(ServerMessageMove | ServerMessageGame | ServerMessageTurn | ServerMessageUser)[]>([]);
+  const [messages, setMessages] = React.useState<Messages>([]);
 
   const requestMove = (
     piece: number
   ): void => {
     console.log(`Request move: ${piece}`);
-    const request: ServerMessageMove = {
+    const request: MessageMove = {
       type: 'move',
       uuid: state.game?.uuid ?? '',
       player: Number(state.game?.players.indexOf(state.user?.uuid ?? '')),
@@ -35,13 +129,26 @@ export const Ur: React.FC<UrProps> = (props) => {
     state.socket?.send(JSON.stringify(request));
   };
 
+  const searchGame = () => {
+    const request: MessageSearch = {
+      type: 'search',
+      group: 0,
+    };
+    console.log(request);
+    state.socket?.send(JSON.stringify(request));
+  };
+
+  const resetView = () => {
+    console.log(`resetView: go to lobby, etc`);
+  };
+
   const viewGame = (
     socket: WebSocket,
     uuid: string,
   ): void => {
     if (!uuid) return;
     console.log(`Game requested`);
-    const request: ServerMessageView = {
+    const request: MessageView = {
       type: 'view',
       uuid: uuid,
     };
@@ -75,16 +182,18 @@ export const Ur: React.FC<UrProps> = (props) => {
             viewGame(socket, result[2]);
             break;
         }
+      } else {
+        const request: MessageSummary = {
+          type: 'summary',
+        };
+        console.log(request);
+        console.log(socket);
+        socket?.send(JSON.stringify(request));
       }
     };
 
     socket.onmessage = (event) => {
-      const message:
-        ServerMessageMove
-        | ServerMessageGame
-        | ServerMessageTurn
-        | ServerMessageUser
-        = JSON.parse(event.data);
+      const message: Message = JSON.parse(event.data);
 
       // console.log(`Incoming message`);
       // console.log(message);
@@ -123,6 +232,20 @@ export const Ur: React.FC<UrProps> = (props) => {
               payload: message,
             });
             break;
+
+          case 'summary':
+            dispatch({
+              type: 'SUMMARY',
+              payload: message,
+            });
+            break;
+
+          case 'search':
+            dispatch({
+              type: 'SEARCH',
+              payload: message,
+            });
+            break;
         }
       } catch (data: any) {
         const error: Error = data;
@@ -141,9 +264,56 @@ export const Ur: React.FC<UrProps> = (props) => {
     };
   }, []);
 
-  if (!state.game || !state.user) {
+  if (!state.user) {
     return (
-      <><p>Waiting for another player...</p></>
+      <><p>Connecting...</p></>
+    )
+  }
+
+  if (state.user.status === 0 && state.summary) {
+    return (
+      <>
+        <h2>Games</h2>
+        <p>
+          {state.summary.games?.map((game, i) => {
+            return (
+              <li key={i}>
+                <strong><a href={`#!/game/${game.uuid}`}>{game.uuid}</a></strong> &ndash; {game.players[0]} vs. {game.players[1]}
+              </li>
+            )
+          })}
+        </p>
+        <h2>Users</h2>
+        <p>
+          {state.summary.users?.map((user, i) => {
+            return (
+              <li key={i}>
+                <strong><a href={`#!/user/${user.uuid}`}>{user.uuid}</a></strong> - Status: {user.status}
+              </li>
+            )
+          })}
+        </p>
+        <button
+          onClick={() => searchGame()}
+        >Search</button>
+      </>
+    )
+  }
+
+  if (state.user.status === 1) {
+    return (
+      <>
+        <p>Waiting for another player...</p>
+        <button
+          onClick={() => resetView()}
+        >Exit</button>
+      </>
+    )
+  }
+
+  if (!state.game && state.user.status === 2) {
+    return (
+      <><p>Please wait...</p></>
     )
   }
 
@@ -176,14 +346,14 @@ export const Ur: React.FC<UrProps> = (props) => {
   // console.log(`theirStartingPieces`);
   // console.log(theirStartingPieces);
   
-  const theirFinishedPieces = state.game.pieces[thierPlayerIdx]
+  const theirFinishedPieces = state.game?.pieces[thierPlayerIdx]
     .map((piece, i) => piece.position === 15 ? i : -1)
     .filter(i => i >= 0);
   // console.log(`theirFinishedPieces`);
   // console.log(theirFinishedPieces);
 
-  const weWon = ourFinishedPieces.length === TOTAL_PIECES;
-  const theyWon = theirFinishedPieces.length === TOTAL_PIECES;
+  const weWon = ourFinishedPieces?.length === TOTAL_PIECES;
+  const theyWon = theirFinishedPieces?.length === TOTAL_PIECES;
 
   return (
     <div>
@@ -202,8 +372,8 @@ export const Ur: React.FC<UrProps> = (props) => {
             <div className="pieces">
               <div>
                 {Array(TOTAL_PIECES).fill(0).map((v, i) => {
-                  const startingIndex = ourStartingPieces.indexOf(i);
-                  const endingIndex = ourFinishedPieces.indexOf(i);
+                  const startingIndex = ourStartingPieces?.indexOf(i) ?? -1;
+                  const endingIndex = ourFinishedPieces?.indexOf(i) ?? -1;
 
                   return (
                     <Piece
@@ -221,8 +391,8 @@ export const Ur: React.FC<UrProps> = (props) => {
             <div className="pieces enemy">
               <div>
                 {Array(TOTAL_PIECES).fill(0).map((v, i) => {
-                  const startingIndex = theirStartingPieces.indexOf(i);
-                  const endingIndex = theirFinishedPieces.indexOf(i);
+                  const startingIndex = theirStartingPieces?.indexOf(i) ?? -1;
+                  const endingIndex = theirFinishedPieces?.indexOf(i) ?? -1;
 
                   return (
                     <Piece
@@ -262,7 +432,7 @@ export const Ur: React.FC<UrProps> = (props) => {
         </div>
         <div
           className="container banner"
-          style={{display: !state.game.state || weWon || theyWon ? 'block' : 'none'}}
+          style={{display: !state.game?.status || weWon || theyWon ? 'block' : 'none'}}
         >
           <div className="vertical-middle">
             <button className="exit" title="Exit game" onClick={() => exitGame()}>←</button>

@@ -1,12 +1,13 @@
 import * as React from "react";
-import { Game, Piece, Pieces, ServerMessageGame, ServerMessageMove, ServerMessageTurn, ServerMessageUser, User } from "./page";
+import { Game, Piece, Pieces, MessageGame, MessageMove, MessageTurn, MessageUser, User, MessageSummary, MessageSearch } from "./components/Ur";
 
 export const TOTAL_PIECES = 7;
 
 export type UrState = {
   socket?: WebSocket,
   user?: User,
-  game?: Game
+  game?: Game,
+  summary?: MessageSummary
 };
 
 export type Action = | {
@@ -14,16 +15,22 @@ export type Action = | {
   payload: WebSocket
 } | {
   type: 'MOVE';
-  payload: ServerMessageMove
+  payload: MessageMove
+} | {
+  type: 'SUMMARY';
+  payload: MessageSummary
+} | {
+  type: 'SEARCH';
+  payload: MessageSearch
 } | {
   type: 'TURN';
-  payload: ServerMessageTurn
+  payload: MessageTurn
 } | {
   type: 'GAME';
-  payload: ServerMessageGame
+  payload: MessageGame
 } | {
   type: 'USER';
-  payload: ServerMessageUser
+  payload: MessageUser
 };
 
 // Create a context
@@ -85,7 +92,7 @@ function reducer(
       newState = {
         ...newState,
         game: {
-          state: state.game?.state ?? 0,
+          status: state.game?.status ?? 0,
           players: state.game?.players ?? [],
           uuid: state.game?.uuid ?? '',
           pieces: state.game?.pieces ?? [],
@@ -193,7 +200,7 @@ function reducer(
         if (skipMove) {
           setTimeout(() => {
             console.log(`skipMove`);
-            const request: ServerMessageMove = {
+            const request: MessageMove = {
               type: 'move',
               uuid: newState.game?.uuid ?? '',
               player: Number(newState.game?.players.indexOf(newState.user?.uuid ?? '')),
@@ -223,7 +230,7 @@ function reducer(
       }
 
       newState.game = {
-        state: action.payload.state,
+        status: action.payload.status,
         players: action.payload.players,
         uuid: action.payload.uuid,
         pieces: pieces,
@@ -242,14 +249,22 @@ function reducer(
 
     case 'USER':
       newState.user = {
-        status: 1,
+        status: action.payload.status,
         uuid: action.payload.uuid,
       };
       console.log(newState);
 
       return newState;
 
+    case 'SUMMARY':
+      newState.summary = action.payload;
+      console.log(newState);
+
+      return newState;
+
     default:
+      console.log(`Type: ${action.type}`);
+      console.log(action.payload);
       return state;
   }
 }
