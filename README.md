@@ -16,7 +16,7 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 * First player randomly selected
 * Pieces move around the board, through blue, up along red, then down into the green squares
 * Player moves one of their available pieces, based on dice roll (between 0-4)
-* Landing on a rosette (darker squares) grants another roll
+* Landing on a rosette (darker squares) grants another roll, maxiumum of three (3) per turn.
 * A player can attack opposing pieces within the red squares, resetting that piece back to square zero (0), unless opposing piece is on the rosette, in which they're protected from attack
 * To finish a piece; the roll must move (exactly) to square fifteen (15)
 * To win; a player must get all pieces to square fifteen (15)
@@ -25,15 +25,19 @@ Rules based on reconstruction by [Irving Finkel](https://en.wikipedia.org/wiki/I
 
 `pnpm run server [1337]` to run [Websocket server](./server.ts) on optional port number (default `1337`)
 
-`pnpm dev` to dev build and run the Next.Js frontend.
+`pnpm dev` to dev build and run the Next.Js frontend. Warning, you may run into socket communication issues with double-render, try command below.
 
 `pnpm run serve` to build and run a production version of the frontend.
 
 ## Todo
 
-* Improve graphics
+* Improve lobby/stats area
+* Server data persistance
+* Customise board size and piece count
 * Challenging - Allow players to challenge their next opponent
 * Scoring - Highscore, win-streak, etc
+* Experimental: StyleX, for eventual `react-strict-dom`
+* Improve graphics
 * Chatbox (maybe)
 
 ## WSS NGINX proxy
