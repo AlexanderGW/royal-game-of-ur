@@ -100,17 +100,8 @@ type MessageView = {
 
 type ClientMessage = MessageMove | MessageSearch | MessageSummary | MessageView;
 
-type ServerMessage = MessageMove | MessageGame | MessageSearch | MessageSummary | MessageTurn | MessageUser;
+type ServerMessage = MessageMove | MessageGame | MessageSummary | MessageTurn | MessageUser;
 
-// type Messages = MessageMove | MessageGame | MessageSearch | MessageTurn | MessageUser;
-
-// type MessageTypes = "move" | "game" | "search" | "turn" | "user";
-
-// type Message = {
-// 	payload: Messages,
-// };
-
-// Optional. You will see this name in eg. 'ps' or 'top' command
 process.title = 'game-of-ur';
 
 const webSocketsServerPort = process.argv[2] || 1337;
@@ -125,8 +116,98 @@ let games: Game[] = [];
 
 let gamesIndex: string[] = [];
 
+// Attempt to match two users with `status=1
+// TODO: Implement `group`
+function matchGameUsers(
+	group: number = 0
+): boolean {
+	const availableUsers = users.filter(user => user.status === 1 && user.game.length === 0);
+	if ((availableUsers.length % 2) === 0) {
+		let gameId = uuid.v4();
+		let players: Players = [];
+
+		// Add two users that are not in a game
+		let i = 0;
+		for (let j = 0; j < users.length; j++) {
+			if (users[j].status === 1 && users[j].game.length === 0) {
+				users[j].status = 2;
+				users[j].game = gameId;
+				players[i] = users[j].uuid;
+				i++;
+			}
+			if (i === 2)
+				break;
+		}
+
+		// We have matched two players
+		if (i === 2) {
+			let pieces: PiecePositions = [];
+			pieces[0] = Array(TOTAL_PIECES).fill(0);
+			pieces[1] = Array(TOTAL_PIECES).fill(0);
+
+			const gameResponse: MessageGame = {
+				type: 'game',
+				uuid: gameId,
+				status: 1,
+				players: players,
+				pieces: pieces,
+				moves: [],
+				turn: {
+					player: getRandomInt(2),
+					roll: getRandomInt(5),
+					rolls: 0,
+				},
+			}
+
+			const gameIndex = games.length;
+			games.push(gameResponse);
+			gamesIndex.push(gameId);
+			sendToGameClients(gameIndex, gameResponse);
+
+			users.filter(user => user.game === gameId).map(user => {
+				const userResponse: MessageUser = {
+					type: 'user',
+					status: user.status,
+					uuid: user.uuid,
+				};
+				sendToClient(user.client, userResponse);
+			});
+
+			// send turn
+			const turnResponse: MessageTurn = {
+				type: 'turn',
+				player: games[gameIndex].turn.player,
+				roll: games[gameIndex].turn.roll,
+				rolls: games[gameIndex].turn.rolls
+			};
+			sendToGameClients(gameIndex, turnResponse);
+
+			// If game is inactive after `GAME_TIMEOUT`, `state` to `0`
+			setTimeout(() => {
+				pollGameState(gameIndex, 0);
+			}, GAME_TIMEOUT);
+
+			return true;
+		}
+
+		// Something went wrong, clear the match lock
+		else {
+			for (let j = 0; j < users.length; j++) {
+				if (users[j].game === gameId) {
+					users[j].status = 1;
+					users[j].game = '';
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 // Generate a random number, upto one before max
-function getRandomInt(max: number): number {
+function getRandomInt(
+	max: number
+): number {
 	return Math.floor(Math.random() * Math.floor(max));
 }
 
@@ -331,94 +412,6 @@ wsServer.on('connection', function(socket, request) {
 
 	sendToClient(clientIndex, userResponse);
 
-	// Match available players
-	const availableUsers = users.filter(user => user.status === 1 && user.game.length === 0);
-	if ((availableUsers.length % 2) === 0) {
-		let gameId = uuid.v4();
-		let players: Players = [];
-
-		// Add two users that are not in a game
-		let i = 0;
-		for (let j = 0; j < users.length; j++) {
-			if (users[j].status === 1 && users[j].game.length === 0) {
-				users[j].status = 2;
-				users[j].game = gameId;
-				players[i] = users[j].uuid;
-				i++;
-			}
-			if (i === 2)
-				break;
-		}
-
-		// We have matched two players
-		if (i === 2) {
-			let pieces: PiecePositions = [];
-			pieces[0] = Array(TOTAL_PIECES).fill(0);
-			pieces[1] = Array(TOTAL_PIECES).fill(0);
-
-			const gameResponse: MessageGame = {
-				type: 'game',
-				uuid: gameId,
-				status: 1,
-				players: players,
-				pieces: pieces,
-				moves: [],
-				turn: {
-					player: getRandomInt(2),
-					roll: getRandomInt(5),
-					rolls: 0,
-				},
-			}
-
-			const gameIndex = games.length;
-			games.push(gameResponse);
-			gamesIndex.push(gameId);
-			sendToGameClients(gameIndex, gameResponse);
-
-			users.filter(user => user.game === gameId).map(user => {
-				const userResponse: MessageUser = {
-					type: 'user',
-					status: user.status,
-					uuid: user.uuid,
-				};
-				sendToClient(user.client, userResponse);
-			});
-
-			// send turn
-			const turnResponse: MessageTurn = {
-				type: 'turn',
-				player: games[gameIndex].turn.player,
-				roll: games[gameIndex].turn.roll,
-				rolls: games[gameIndex].turn.rolls
-			};
-			sendToGameClients(gameIndex, turnResponse);
-
-			// If game is inactive after `GAME_TIMEOUT`, `state` to `0`
-			setTimeout(() => {
-				pollGameState(gameIndex, 0);
-			}, GAME_TIMEOUT);
-		}
-
-		// Something went wrong, clear the match lock
-		else {
-			for (let j = 0; j < users.length; j++) {
-				if (users[j].game === gameId) {
-					users[j].status = 1;
-					users[j].game = '';
-				}
-			}
-		}
-	} else {
-
-		console.log(`Waiting for even number of players`);
-	}
-
-
-
-
-
-
-
 	// user sent some message
 	socket.on('message', function(data) {
 		const rawMessage = data.toString();
@@ -460,26 +453,24 @@ wsServer.on('connection', function(socket, request) {
 					break;
 
 				/**
-				 * Game viewing requested, respond with game data
+				 * User wants to start a game
 				 */
 				case 'search':
 					users[clientIndex].status = 1;
 
-					// const response: MessageSearch = {
-					// 	type: 'search',
-					// 	group: 0
-					// }
+					// Attempt to match a user in the same `group`
+					const result = matchGameUsers(json.group);
 
-					// sendToClient(clientIndex, response);
-
-
-					const userResponse: MessageUser = {
-						type: 'user',
-						status: users[clientIndex].status,
-						uuid: users[clientIndex].uuid,
-					};
-				
-					sendToClient(clientIndex, userResponse);
+					// Awaiting players...
+					if (!result) {
+						const userResponse: MessageUser = {
+							type: 'user',
+							status: users[clientIndex].status,
+							uuid: users[clientIndex].uuid,
+						};
+					
+						sendToClient(clientIndex, userResponse);
+					}
 
 					break;
 
