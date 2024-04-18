@@ -20,9 +20,6 @@ export type Action = | {
   type: 'SUMMARY';
   payload: MessageSummary
 } | {
-  type: 'SEARCH';
-  payload: MessageSearch
-} | {
   type: 'TURN';
   payload: MessageTurn
 } | {
@@ -54,7 +51,7 @@ function reducer(
   switch (action.type) {
     case 'CONNECT':
       newState.socket = action.payload;
-      console.log(newState);
+      // console.log(newState);
 
       return newState;
 
@@ -84,7 +81,7 @@ function reducer(
         }
       }
 
-      console.log(newState);
+      // console.log(newState);
 
       return newState;
 
@@ -212,7 +209,7 @@ function reducer(
         }
       }
 
-      console.log(newState);
+      // console.log(newState);
 
       return newState;
 
@@ -241,7 +238,7 @@ function reducer(
           rolls: 0,
         }
       };
-      console.log(newState);
+      // console.log(newState);
 
       window.location.hash = `#!/game/${action.payload.uuid}`;
 
@@ -252,20 +249,20 @@ function reducer(
         status: action.payload.status,
         uuid: action.payload.uuid,
       };
-      console.log(newState);
+      // console.log(newState);
 
       return newState;
 
     case 'SUMMARY':
       newState.summary = action.payload;
-      console.log(newState);
+      // console.log(newState);
 
       return newState;
 
-    default:
-      console.log(`Type: ${action.type}`);
-      console.log(action.payload);
-      return state;
+    // default:
+    //   console.log(`Type: ${action.type}`);
+    //   console.log(action.payload);
+    //   return state;
   }
 }
 

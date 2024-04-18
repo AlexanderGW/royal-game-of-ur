@@ -39,11 +39,6 @@ type Game = {
 
 type GameSummary = Omit<Game, "moves" | "turn">;
 
-
-
-
-
-
 type MessageMove = {
 	type: 'move',
 	uuid: string,
@@ -456,19 +451,32 @@ wsServer.on('connection', function(socket, request) {
 				 * User wants to start a game
 				 */
 				case 'search':
-					users[clientIndex].status = 1;
+					let sendUpdate: boolean = false;
 
+					// Update status; `-1` to exit search
+					users[clientIndex].status = json.group >= 0 ? 1 : 0;
+
+					
+					// Exit search
+					if (json.group === -1)
+						sendUpdate = true;
+					
 					// Attempt to match a user in the same `group`
-					const result = matchGameUsers(json.group);
+					else {
+						const haveMatch = matchGameUsers(json.group);
 
-					// Awaiting players...
-					if (!result) {
+						// Awaiting players...
+						if (!haveMatch)
+							sendUpdate = true;
+					}
+
+					if (sendUpdate) {
 						const userResponse: MessageUser = {
 							type: 'user',
 							status: users[clientIndex].status,
 							uuid: users[clientIndex].uuid,
 						};
-					
+	
 						sendToClient(clientIndex, userResponse);
 					}
 
@@ -576,8 +584,8 @@ wsServer.on('connection', function(socket, request) {
 						let scores: number[] = [];
 						scores.push(games[gameIndex].pieces[0].reduce((score, position) => score + position, 0));
 						scores.push(games[gameIndex].pieces[1].reduce((score, position) => score + position, 0));
-						console.log(`scores`);
-						console.log(scores);
+						// console.log(`scores`);
+						// console.log(scores);
 
 						// Winner
 						const result = scores.indexOf(TOTAL_PIECES * TOTAL_SPACES);

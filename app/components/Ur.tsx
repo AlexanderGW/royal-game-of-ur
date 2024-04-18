@@ -51,7 +51,7 @@ export type MessageView = {
 
 export type MessageSearch = {
 	type: 'search',
-	group: 0,
+	group: number,
 };
 
 export type MessageSummary = {
@@ -92,7 +92,6 @@ export type Message =
 	MessageMove
 	| MessageGame
 	| MessageSummary
-  | MessageSearch
 	| MessageTurn
 	| MessageUser;
 
@@ -129,17 +128,15 @@ export const Ur: React.FC<UrProps> = (props) => {
     state.socket?.send(JSON.stringify(request));
   };
 
-  const searchGame = () => {
+  const requestSearch = (
+    group: number = -1,
+  ) => {
     const request: MessageSearch = {
       type: 'search',
-      group: 0,
+      group: group,
     };
-    console.log(request);
+    // console.log(request);
     state.socket?.send(JSON.stringify(request));
-  };
-
-  const resetView = () => {
-    console.log(`resetView: go to lobby, etc`);
   };
 
   const viewGame = (
@@ -152,8 +149,7 @@ export const Ur: React.FC<UrProps> = (props) => {
       type: 'view',
       uuid: uuid,
     };
-    console.log(request);
-    console.log(socket);
+    // console.log(request);
     socket?.send(JSON.stringify(request));
   };
 
@@ -239,13 +235,6 @@ export const Ur: React.FC<UrProps> = (props) => {
               payload: message,
             });
             break;
-
-          case 'search':
-            dispatch({
-              type: 'SEARCH',
-              payload: message,
-            });
-            break;
         }
       } catch (data: any) {
         const error: Error = data;
@@ -294,7 +283,7 @@ export const Ur: React.FC<UrProps> = (props) => {
           })}
         </p>
         <button
-          onClick={() => searchGame()}
+          onClick={() => requestSearch(0)}
         >Search</button>
       </>
     )
@@ -305,7 +294,7 @@ export const Ur: React.FC<UrProps> = (props) => {
       <>
         <p>Waiting for another player...</p>
         <button
-          onClick={() => resetView()}
+          onClick={() => requestSearch(-1)}
         >Exit</button>
       </>
     )
