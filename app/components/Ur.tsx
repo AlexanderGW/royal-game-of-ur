@@ -155,6 +155,7 @@ export const Ur: React.FC<UrProps> = (props) => {
 
   const exitGame = (): void => {
     window.location.hash = '/';
+    window.location.reload();
   };
 
   React.useEffect(() => {
@@ -262,29 +263,42 @@ export const Ur: React.FC<UrProps> = (props) => {
   if (state.user.status === 0 && state.summary) {
     return (
       <>
-        <h2>Games</h2>
-        <p>
-          {state.summary.games?.map((game, i) => {
-            return (
-              <li key={i}>
-                <strong><a href={`#!/game/${game.uuid}`}>{game.uuid}</a></strong> &ndash; {game.players[0]} vs. {game.players[1]}
-              </li>
-            )
-          })}
-        </p>
-        <h2>Users</h2>
-        <p>
-          {state.summary.users?.map((user, i) => {
-            return (
-              <li key={i}>
-                <strong><a href={`#!/user/${user.uuid}`}>{user.uuid}</a></strong> - Status: {user.status}
-              </li>
-            )
-          })}
-        </p>
         <button
           onClick={() => requestSearch(0)}
         >Search</button>
+        <h2>Games</h2>
+        <ul>
+          {state.summary.games?.map((game, i) => {
+            return (
+              <li key={i} className="game">
+                <div>
+                  <div className="icon">
+                    <div className="stats">
+                      <div className="p0">{game.players[0]}</div>
+                      <div>vs</div>
+                      <div className="p1">{game.players[1]}</div>
+                    </div>
+                  </div>
+                  <strong><a href={`#!/game/${game.uuid}`}>{game.uuid}</a></strong>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+        <h2>Users</h2>
+        <ul>
+          {state.summary.users?.map((user, i) => {
+            return (
+              <li key={i} className="user">
+                <div>
+                  <div className="icon"></div>
+                  <strong><a href={`#!/user/${user.uuid}`}>{user.uuid}</a></strong>
+                  <br />Status: {user.status === 2 ? 'Gaming' : (user.status === 1 ? 'Searching' : 'Idle')}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       </>
     )
   }

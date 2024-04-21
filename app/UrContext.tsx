@@ -241,6 +241,9 @@ function reducer(
       // console.log(newState);
 
       window.location.hash = `#!/game/${action.payload.uuid}`;
+      // setTimeout(() => {
+      //   window.location.reload();
+      // }, 500);
 
       return newState;
 

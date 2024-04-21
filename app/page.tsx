@@ -17,8 +17,10 @@ const s = stylex.create({
 
 export default function Home() {
 
+  // className={stylex(s.main)}
+
   return (
-    <main className={stylex(s.main)}>
+    <main>
       <GameProvider>
         <Ur />
       </GameProvider>
