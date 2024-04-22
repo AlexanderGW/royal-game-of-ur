@@ -112,6 +112,7 @@ export const Ur: React.FC<UrProps> = (props) => {
   const { state, dispatch } = useGame();
 
   const [messages, setMessages] = React.useState<Messages>([]);
+  const [rotation, setRotation] = React.useState<number>(0);
 
   const requestMove = (
     piece: number
@@ -362,7 +363,7 @@ export const Ur: React.FC<UrProps> = (props) => {
     <div>
       <div className="container game">
         <div className="ur">
-          <div className="view">
+          <div className="view" style={{ transform: `rotate(${rotation}deg)` }}>
             <div className="board">
               {Array(3).fill(0).map((v, i) =>
                 <div key={i}>
@@ -425,7 +426,15 @@ export const Ur: React.FC<UrProps> = (props) => {
             <button className="exit" title="Exit game" onClick={() => exitGame()}>✕</button>
           </div>
           <div>
-            <button className="rotate" title="Rotate the board 90 degrees">↻</button>
+            <button
+              className="rotate"
+              title="Rotate the board 90 degrees"
+              onClick={() => {
+                setRotation(prev => {
+                  return prev + 90;
+                });
+              }}
+            >↻</button>
           </div>
           <div>
             <span id="state">{state.game ? (
