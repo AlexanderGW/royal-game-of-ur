@@ -6,14 +6,21 @@
  */
 
 import * as uuid from 'uuid';
-import { WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import * as http from 'node:http';
 
 const TOTAL_PIECES = 7;
 const TOTAL_SPACES = 15;
 const GAME_TIMEOUT = 300000;
+const PING_TIMEOUT = 5000;
 
 type PiecePositions = number[][];
+
+type Client = {
+	socket: WebSocket,
+	// interval?: NodeJS.Timeout,
+	// iteration: number,
+};
 
 type User = {
 	client: number,
@@ -88,20 +95,25 @@ type MessageUser = {
 	uuid: string,
 };
 
+type MessagePing = {
+	type: 'ping',
+	i: number,
+};
+
 type MessageView = {
 	type: "view",
 	uuid: string,
 };
 
-type ClientMessage = MessageMove | MessageSearch | MessageSummary | MessageView;
+type ClientMessage = MessageMove | MessageSearch | MessageSummary | MessagePing | MessageView;
 
-type ServerMessage = MessageMove | MessageGame | MessageSummary | MessageTurn | MessageUser;
+type ServerMessage = MessageMove | MessageGame | MessageSummary | MessageTurn | MessagePing | MessageUser;
 
 process.title = 'game-of-ur';
 
 const webSocketsServerPort = process.argv[2] || 1337;
 
-let clients: any[] = []; // WebSocket
+let clients: Client[] = [];
 
 let users: User[] = [];
 
@@ -276,7 +288,7 @@ function sendToClient(
 	message: ServerMessage,
 ) {
 	const json = JSON.stringify(message);
-	clients[clientIndex]?.send(json);
+	clients[clientIndex].socket.send(json);
 	console.log(`${(new Date())} --> ${users[clientIndex].uuid}: ${json}`);
 }
 
@@ -335,6 +347,20 @@ function pollGameState(
 	}
 }
 
+function pollUser(
+	clientIndex: number,
+	i: number,
+): void {
+	const message: MessagePing = {
+		type: 'ping',
+		i,
+	};
+	sendToClient(clientIndex, message);
+	setTimeout(() => {
+		pollUser(clientIndex, i + 1);
+	}, PING_TIMEOUT);
+}
+
 /**
  * HTTP server
  */
@@ -385,7 +411,11 @@ wsServer.on('connection', function(socket, request) {
 
 	const clientIndex = clients.length;
 
-	clients.push(socket);
+	const client: Client = {
+		socket: socket,
+		// iteration: 0,
+	};
+	clients.push(client);
 
 	users.push({
 		client: clientIndex,
@@ -399,15 +429,19 @@ wsServer.on('connection', function(socket, request) {
 	console.log(`${(new Date())}; User established: ${userId}`);
 
 	// Send user their uuid
-	const userResponse: MessageUser = {
+	const userMessage: MessageUser = {
 		type: 'user',
 		status: 0,
 		uuid: userId
 	};
 
-	sendToClient(clientIndex, userResponse);
+	sendToClient(clientIndex, userMessage);
 
-	// user sent some message
+	setTimeout(() => {
+		pollUser(clientIndex, 0);
+	}, PING_TIMEOUT);
+
+	// Received message from client
 	socket.on('message', function(data) {
 		const rawMessage = data.toString();
 
@@ -662,6 +696,8 @@ wsServer.on('connection', function(socket, request) {
 
 			// Remove user from the list of connected clients
 			clients.splice(clientIndex, 1);
+			// const client = clients.splice(clientIndex, 1);
+			// clearInterval(client[0].interval);
 		}
 	});
 });

@@ -82,6 +82,11 @@ export type MessageTurn = {
 	rolls: number,
 };
 
+type MessagePing = {
+	type: 'ping',
+	i: number,
+};
+
 export type MessageUser = {
 	type: 'user',
 	status: number,
@@ -93,6 +98,7 @@ export type Message =
 	| MessageGame
 	| MessageSummary
 	| MessageTurn
+  | MessagePing
 	| MessageUser;
 
 export type Messages = (Message)[];
@@ -229,6 +235,14 @@ export const Ur: React.FC<UrProps> = (props) => {
               type: 'TURN',
               payload: message,
             });
+            break;
+
+          case 'ping':
+            const messagePing: MessagePing = {
+              type: 'ping',
+              i: message.i,
+            };
+            socket.send(JSON.stringify(messagePing));
             break;
 
           case 'summary':
@@ -426,20 +440,18 @@ export const Ur: React.FC<UrProps> = (props) => {
             <button className="exit" title="Exit game" onClick={() => exitGame()}>✕</button>
           </div>
           <div>
+            <span id="state">{state.game ? (
+              `${state.game.turn.player === ourPlayerIdx ? 'we' : 'they'} rolled ${state.game.turn.roll}`
+            ) : 'Start'}</span>
+          </div>
+          <div>
             <button
               className="rotate"
               title="Rotate the board 90 degrees"
               onClick={() => {
-                setRotation(prev => {
-                  return prev + 90;
-                });
+                setRotation(prev => prev + 90);
               }}
             >↻</button>
-          </div>
-          <div>
-            <span id="state">{state.game ? (
-              `${state.game.turn.player === ourPlayerIdx ? 'we' : 'they'} rolled ${state.game.turn.roll}`
-            ) : 'Start'}</span>
           </div>
         </div>
         <div
