@@ -1,1 +1,15 @@
-# To be completed
+[Unit]
+Description=Royal Game of Ur
+Documentation=
+After=network.target
+
+[Service]
+WorkingDirectory=/srv/royal-game-of-ur
+#Environment=NODE_PORT=3001
+Type=simple
+User=anon
+ExecStart=/home/anon/.nvm/versions/node/v20.12.2/bin/node node_modules/ts-node/dist/bin.js ./server.ts 7572
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
